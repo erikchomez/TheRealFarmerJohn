@@ -3,4 +3,4 @@ layout: default
 title: Proposal
 ---
 
-{{ page.title }}
+# {{ page.title }}
