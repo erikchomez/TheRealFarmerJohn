@@ -9,8 +9,8 @@ title:  Team
 ## Erik Gomez
 ***UCI Net ID***: erikg5
 
-## USER 2
-***UCI Net ID***: ucinetid2
+## Marcelo Cubillos
+***UCI Net ID***: mcubillo
 
 ## USER 3
 ***UCI Net ID***: ucinetid3
