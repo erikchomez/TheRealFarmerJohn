@@ -12,5 +12,5 @@ title:  Team
 ## Marcelo Cubillos
 ***UCI Net ID***: mcubillo
 
-## USER 3
-***UCI Net ID***: ucinetid3
+## Bill Kwon 
+***UCI Net ID***: jskwon2
