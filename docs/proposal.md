@@ -19,4 +19,4 @@ The quantitative metrics we plan to evaluate are the accuracy of the agent's gen
 We will be able to qualitatively measure the success of our GAN based on how effectively it produced the terrains. Since our GAN will generate voxel models, importing them to Minecraft will be our way to verify it works. Our moonshot case would be to create a GAN capable of procedural generation of larger, more expansive models based on the training data.
 
 ## Appointment with the Instructor
-We plan on meeting with the instructor on Thursday October 21 @ 2:15pm.
+We plan on meeting with the instructor on Thursday October 14 @ 2:15pm.
