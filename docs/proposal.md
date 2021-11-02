@@ -11,10 +11,15 @@ title: Proposal
 The goal of this project is to train an agent to maximize the amount of crop produced using a combination of tabular Q-learning and curriculum learning. The agent starts off with an easy task and gradually the difficulty of each task is increased. The following is a sample curriculum: 
 
  1. Task 1
+
 The agent is placed in an enclosed environment with the necessary tools and resources to begin farming.
+ 
  2. Task 2
+
 The agent is placed in an open environment without limited tools and resources.
+ 
  3. Task 3
+
 The agent is placed in an open environment without any tools and resources.
 
 ## AI/ML Algorithms
