@@ -12,13 +12,10 @@ def generate_enclosed_area():
     fences = ''
 
     for i in range(-4, 5):
-        for j in range(-4, 5):
-            if i != -4 or i != 4:
-                fences += fence_block.format(i, 4)
-                fences += fence_block.format(i, -4)
-            else:
-
-                fences += fence_block.format(i, j)
+        fences += fence_block.format(-4, i)
+        fences += fence_block.format(4, i)
+        fences += fence_block.format(i, 4)
+        fences += fence_block.format(i, -4)
 
     return fences + farmland
 
@@ -55,7 +52,7 @@ def get_mission_xml():
               <AgentSection mode="Survival">
                 <Name>CS175 Farmer</Name>
                 <AgentStart>
-                  <Placement x="0" y="2" z="-3" pitch="0" yaw="0"/>
+                  <Placement x="0" y="2" z="-3" pitch="45" yaw="0"/>
                     <Inventory>
                       <InventoryItem slot="0" type="diamond_hoe"/>
                     </Inventory>
