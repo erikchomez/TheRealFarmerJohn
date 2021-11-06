@@ -1,3 +1,5 @@
+OBS_SIZE = 3
+
 
 def generate_enclosed_area():
     """
@@ -41,7 +43,7 @@ def get_mission_xml():
                 </ServerInitialConditions>
               
                 <ServerHandlers>
-                  <FlatWorldGenerator generatorString="3;7,2;1;"/>
+                  <FlatWorldGenerator generatorString="3;7,2;1;" forceReset="true"/>
                   <DrawingDecorator>''' + \
                     generate_enclosed_area() + \
                   '''</DrawingDecorator>
@@ -55,11 +57,23 @@ def get_mission_xml():
                   <Placement x="0" y="2" z="-3" pitch="45" yaw="0"/>
                     <Inventory>
                       <InventoryItem slot="0" type="diamond_hoe"/>
+                      <InventoryItem slot="1" type="wheat_seeds" quantity="64"/>
                     </Inventory>
                 </AgentStart>
                 <AgentHandlers>
+                  <RewardForDiscardingItem>
+                    <Item reward="5" type="wheat_seeds"/>
+                  </RewardForDiscardingItem>
+                  <ContinuousMovementCommands/>
+                  <InventoryCommands/>
                   <ObservationFromFullStats/>
-                  <ContinuousMovementCommands turnSpeedDegs="180"/>
+                  <ObservationFromRay/>
+                  <ObservationFromGrid>
+                    <Grid name="floor3x3">
+                        <min x="-1" y="-1" z="-1"/>
+                        <max x="1" y="-1" z="1"/>
+                    </Grid>
+                  </ObservationFromGrid>
                 </AgentHandlers>
               </AgentSection>
             </Mission>'''
