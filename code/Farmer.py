@@ -32,7 +32,7 @@ class Farmer(gym.Env):
         # Rllib parameters
         # self.action_space = Discrete(len(self.action_dict))
         self.action_space = Box(-1, 1, shape=(len(self.action_dict),), dtype=np.float32)
-        self.observation_space = Box(0, 1, shape=(self.obs_size * self.obs_size, ), dtype=np.float32)
+        self.observation_space = Box(0, 1, shape=(2, self.obs_size * self.obs_size, ), dtype=np.float32)
 
         # Malmo parameters
         self.agent_host = MalmoPython.AgentHost()
@@ -110,12 +110,13 @@ class Farmer(gym.Env):
             print('Logging')
 
         # get observation
-        self.obs, self.allow_break_action = self.get_observation(world_state)
+        self.obs = self.get_observation(world_state)
 
         return self.obs
 
     def step(self, action):
         # get action
+        print(self.obs)
         command_move = "move " + str(action[0])
         command_turn = "turn " + str(action[1])
         command_use = "use 1" if action[2] > 0.5 else "use 0"
@@ -139,7 +140,7 @@ class Farmer(gym.Env):
         for error in world_state.errors:
             print('Error: ', error.text)
 
-        self.obs, self.allow_break_action = self.get_observation(world_state)
+        self.obs = self.get_observation(world_state)
 
         # get done
         done = not world_state.is_mission_running
@@ -155,7 +156,17 @@ class Farmer(gym.Env):
         return self.obs, reward, done, dict()
 
     def get_observation(self, world_state):
-        obs = np.zeros((self.obs_size * self.obs_size, ))
+        """
+        Get world observations
+        Will be using 3x3 grid, rotated depending on the orientation of the agent
+        """
+        # obs = np.zeros((self.obs_size * self.obs_size, ))
+        obs = np.zeros((2, self.obs_size * self.obs_size))
+        # list to keep track of positions where farmland is available
+        farmland_obs = np.zeros((self.obs_size * self.obs_size,))
+        # list to keep track of positions where dirt is available, and needs to be hoed
+        dirt_obs = np.zeros((self.obs_size * self.obs_size,))
+
         allow_break_action = False
 
         while world_state.is_mission_running:
@@ -174,13 +185,18 @@ class Farmer(gym.Env):
                 grid = observations['floor3x3']
                 # print('len grid: ', len(grid))
                 for i, x in enumerate(grid):
-                    obs[i] = x == 'farmland'
+                    obs[0][i] = x == 'farmland'
+                    obs[1][i] = x == 'dirt'
+                    # farmland_obs[i] = x == 'farmland'
+                    # dirt_obs[i] = x == 'dirt'
+
                 # print('obs before ', obs)
                 # rotate observations with orientation of agent
-                obs = obs.reshape((3, 3))
-                # print(obs)
-                yaw = observations['Yaw']
+                obs = obs.reshape((2, 3, 3))
+                print(obs)
 
+                yaw = observations['Yaw']
+                # TODO: rotate each observation independently
                 if 255 <= yaw < 315:
                     obs = np.rot90(obs, k=1)
 
@@ -190,10 +206,12 @@ class Farmer(gym.Env):
                 elif 45 <= yaw < 135:
                     obs = np.rot90(obs, k=3)
 
-                obs = obs.flatten()
+                # obs = obs.flatten()
+                obs = obs.reshape((2, self.obs_size * self.obs_size))
+
                 # print('obs after ', obs)
                 allow_break_action = observations['LineOfSight']['type'] == 'farmland'
 
                 break
 
-        return obs, allow_break_action
+        return obs
