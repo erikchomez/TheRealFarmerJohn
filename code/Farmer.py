@@ -10,8 +10,12 @@ import sys
 import utils as uti
 import time
 import gym
+import os
 import numpy as np
 from gym.spaces import Discrete, Box
+import matplotlib.pyplot as plt
+
+JUMP_REWARD = -10
 
 
 class Farmer(gym.Env):
@@ -19,20 +23,21 @@ class Farmer(gym.Env):
         self.size = 50
         self.reward_density = 0.1
         self.penalty_density = 0.02
-        self.obs_size = 4
+        self.obs_size = 3
         self.max_episode_steps = 2000
         self.log_frequency = 1
 
         self.action_dict = {
             0: 'move 1',
             1: 'turn 1',
-            2: 'turn -1',
-            3: 'attack 1'
+            2: 'use 1',
+            3: 'jump 1'
         }
 
         # Rllib parameters
-        self.action_space = Discrete(len(self.action_dict))
-        self.observation_space = Box(0, 1, shape=(2 * self.obs_size * self.obs_size, ), dtype=np.float32)
+        # self.action_space = Discrete(len(self.action_dict))
+        self.action_space = Box(-1, 1, shape=(len(self.action_dict),), dtype=np.float32)
+        self.observation_space = Box(0, 1, shape=(2, self.obs_size * self.obs_size, ), dtype=np.float32)
 
         # Malmo parameters
         self.agent_host = MalmoPython.AgentHost()
@@ -48,10 +53,13 @@ class Farmer(gym.Env):
         # Farmer parameters
         self.obs = None
         self.allow_break_action = False
+        self.in_water_block = False
         self.episode_step = 0
         self.episode_return = 0
         self.returns = []
         self.steps = []
+        # TODO: use somehow
+        self.iteration_count = 0
 
     def init_malmo(self):
         my_mission = MalmoPython.MissionSpec(uti.get_mission_xml(), True)
@@ -104,33 +112,72 @@ class Farmer(gym.Env):
 
         # log
         if len(self.returns) > self.log_frequency + 1 and len(self.returns) % self.log_frequency == 0:
-            # self.log_returns()
+            self.log_returns()
             print('Logging')
 
+        self.iteration_count += 1
+
         # get observation
-        self.obs, self.allow_break_action = self.get_observation(world_state)
+        self.obs = self.get_observation(world_state)
 
         return self.obs
 
     def step(self, action):
         # get action
-        command = self.action_dict[action]
+        command_move = "move " + str(action[0])
+        command_turn = "turn " + str(action[1])
+        command_use = "use 1" if action[2] > 0.5 else "use 0"
+        command_jump = "jump 1" if action[3] > 0.5 else "jump 0"
 
-        if command != 'attack 1' or self.allow_break_action:
-            self.agent_host.sendCommand(command)
+        jump_reward = 0
+
+        # check if agent is stuck in water
+        if self.in_water_block:
+            print("STUCK IN WATER BLOCK")
+            self.agent_host.sendCommand("jump 1")
+            self.agent_host.sendCommand("move 1")
+
+            jump_reward += JUMP_REWARD
+            time.sleep(2)
+
+        self.in_water_block = False
+        self.agent_host.sendCommand("jump 0")
+
+        # check if any farmland is in front of agent
+        if any(self.obs[0][:3]) and command_use == "use 1":
+            time.sleep(2)
+            # switch to hotbar.1: wheat seeds
+            self._use_hotbar(2)
             time.sleep(0.2)
-            self.episode_step += 1
+        # check if any dirt is in front of agent
+        elif any(self.obs[1][:3]) and command_use == "use 1":
+            time.sleep(2)
+            # switch to hotbar.0: diamond hoe
+            self._use_hotbar(1)
+            time.sleep(0.2)
 
-        # get observation
+        else:
+            time.sleep(0.2)
+
+            self.agent_host.sendCommand(command_move)
+            self.agent_host.sendCommand(command_turn)
+
+        self.episode_step += 1
+
         world_state = self.agent_host.getWorldState()
 
         for error in world_state.errors:
             print('Error: ', error.text)
 
-        self.obs, self.allow_break_action = self.get_observation(world_state)
+        self.obs = self.get_observation(world_state)
 
         # get done
         done = not world_state.is_mission_running
+
+        # check number of steps
+        if self.episode_step == self.max_episode_steps:
+            print('Number of steps: ', self.episode_step)
+            done = True
 
         # get reward
         reward = 0
@@ -139,12 +186,34 @@ class Farmer(gym.Env):
             reward += r.getValue()
 
         self.episode_return += reward
+        self.episode_return += jump_reward
 
         return self.obs, reward, done, dict()
 
+    def _use_hotbar(self, hotbar_key):
+        """
+        Switch to hotbar item at hotbar_key
+        Hotbar is 0-indexes, but commands are 1-indexed
+        """
+        command = "hotbar.{} {}"
+
+        # press key and release key
+        for i in reversed(range(2)):
+            self.agent_host.sendCommand(command.format(hotbar_key, i))
+
+        # send command to use item in hotbar
+        self.agent_host.sendCommand("use 1")
+
     def get_observation(self, world_state):
-        obs = np.zeros((2 * self.obs_size * self.obs_size, ))
-        allow_break_action = False
+        """
+        Get world observations
+        Will be using 3x3 grid, rotated depending on the orientation of the agent
+        """
+        # obs = np.zeros((self.obs_size * self.obs_size, ))
+        # observations for farmland and dirt
+        obs = np.zeros((2, self.obs_size * self.obs_size))
+
+        # allow_break_action = False
 
         while world_state.is_mission_running:
             time.sleep(0.1)
@@ -158,271 +227,70 @@ class Farmer(gym.Env):
                 # first we get json from observation API
                 msg = world_state.observations[-1].text
                 observations = json.loads(msg)
-
+                # print(observations)
                 # get observation
-                grid = observations['floorAll']
+                # TODO: fix crash on KeyError: 'floor3x3'
+                try:
+                    grid = observations['floor3x3']
+                    # print(grid)
 
+                except KeyError:
+                    continue
+                # print(observations)
+                # if agent falls into water block
+                if observations['YPos'] == 1.0:
+                    self.in_water_block = True
+
+                # print('len grid: ', len(grid))
                 for i, x in enumerate(grid):
-                    obs[i] = x == 'diamond_ore' or x == 'lava'
+                    obs[0][i] = x == 'farmland'
+                    obs[1][i] = x == 'dirt'
+                    # farmland_obs[i] = x == 'farmland'
+                    # dirt_obs[i] = x == 'dirt'
 
+                # print('obs before ', obs)
                 # rotate observations with orientation of agent
-                obs = obs.reshape((2, self.obs_size * self.obs_size))
+                obs = obs.reshape((2, 3, 3))
 
                 yaw = observations['Yaw']
 
+                # rotate on axes=(1,2) so we can have farmland observations at the top
                 if 255 <= yaw < 315:
-                    obs = np.rot90(obs, k=1, axes=(1,2))
+                    obs = np.rot90(obs, k=1, axes=(1, 2))
 
                 elif yaw >= 315 or yaw < 45:
                     obs = np.rot90(obs, k=2, axes=(1, 2))
 
                 elif 45 <= yaw < 135:
-
                     obs = np.rot90(obs, k=3, axes=(1, 2))
 
-                obs = obs.flatten()
-
-                allow_break_action = observations['LineOfSight']['type'] == 'diamond_ore'
+                # obs = obs.flatten()
+                obs = obs.reshape((2, self.obs_size * self.obs_size))
+                # print('obs after ', obs)
+                # allow_break_action = observations['LineOfSight']['type'] == 'farmland'
 
                 break
 
-        return obs, allow_break_action
+        return obs
 
+    def log_returns(self):
+        """
+        Log the current returns as a graph and text file
 
-# class TabQAgent(object):
-#     """ Tabular Q-learning agent for discrete state/action spaces"""
-#
-#     def __init__(self):
-#         self.epsilon = 0.01  # chance of taking a random action instead of the best
-#         self.logger = logging.getLogger(__name__)
-#
-#         if LOGGING:
-#             self.logger.setLevel(logging.DEBUG)
-#         else:
-#             self.logger.setLevel(logging.INFO)
-#
-#         self.logger.handlers = []
-#         self.logger.addHandler(logging.StreamHandler(sys.stdout))
-#
-#         self.actions = ["movenorth 1", "movesouth 1", "movewest 1", "moveeast 1"]
-#
-#         self.actions_dict = {
-#             0: 'move 1',
-#             1: 'turn 1',
-#             2: 'turn -1',
-#             3: 'attack 1'
-#         }
-#
-#         self.q_table = {}
-#         self.canvas = None
-#         self.root = None
-#
-#         self.prev_s = None
-#         self.prev_a = None
-#
-#     def update_q_table(self, reward, current_state):
-#         """
-#         Change Q-table to reflect what we have learnt
-#         :param reward:
-#         :param current_state:
-#         :return:
-#         """
-#         # retrieve the old action value from the Q-table
-#         # indexed by the previous state and the previous action
-#         old_q = self.q_table[self.prev_s][self.prev_a]
-#
-#         # assign the new action value
-#         new_q = reward + old_q
-#
-#         # assign the new action value to the Q-table
-#         self.q_table[self.prev_s][self.prev_a] = new_q
-#
-#     def update_q_table_from_terminating_state(self, reward):
-#         """
-#         Change Q-table to reflect what we have learnt after reaching a terminal state
-#         :param reward:
-#         :return:
-#         """
-#         old_q = self.q_table[self.prev_s][self.prev_a]
-#
-#         # assign the new action value
-#         new_q = reward + old_q
-#
-#         # assign the new action value to the Q-table
-#         self.q_table[self.prev_s][self.prev_a] = new_q
-#
-#     def act(self, world_state, agent_host, current_r):
-#         """
-#         Take 1 action in response to the current world state
-#         :param world_state:
-#         :param agent_host:
-#         :param current_r:
-#         :return:
-#         """
-#         obs_text = world_state.observations[-1].text
-#         obs = json.loads(obs_text)  # most recent observation
-#
-#         self.logger.debug(obs)
-#
-#         if u'XPos' not in obs or u'ZPos' not in obs:
-#             self.logger.error("Incomplete observation received: %s" % obs_text)
-#             return 0
-#
-#         current_s = "%d:%d" % (int(obs[u'XPos']), int(obs[u'ZPos']))
-#
-#         self.logger.debug("State: %s (x = %.2f, z = %.2f)" % (current_s, float(obs[u'XPos']), float(obs[u'ZPos'])))
-#
-#         if current_s not in self.q_table:
-#             self.q_table[current_s] = ([0] * len(self.actions))
-#
-#         # update Q values
-#         if self.prev_s is not None and self.prev_a is not None:
-#             self.update_q_table(current_r, current_s)
-#
-#         # TODO: implement drawing Q-Table
-#         # self.draw_Q(curr_x=int(obs[u'XPos']), curr_y=int(obs[u'ZPos']))
-#
-#         # select the next action
-#         rnd = random.random()
-#
-#         if rnd < self.epsilon:
-#             action = random.randint(0, len(self.actions) - 1)
-#             self.logger.info("Random action: %s" % self.actions[action])
-#
-#         else:
-#             m = max(self.q_table[current_s])
-#             self.logger.debug("Current values: %s" % ",".join(str(x) for x in self.q_table[current_s]))
-#
-#             actions_list = []
-#
-#             for i in range(len(self.actions)):
-#                 if self.q_table[current_s][i] == m:
-#                     actions_list.append(i)
-#
-#             y = random.randint(0, len(actions_list) - 1)
-#             action = actions_list[y]
-#
-#             self.logger.info("Taking q action: %s" % self.actions[action])
-#
-#         # try to send the selected action
-#         # only update prev_s if this succeeds
-#
-#         try:
-#             agent_host.sendCommand(self.actions[action])
-#             self.prev_s = current_s
-#             self.prev_a = action
-#             print('----MOVE SUCCESS----')
-#
-#         except RuntimeError as e:
-#             self.logger.error("Failed to send command: %s" % e)
-#
-#         return current_r
-#
-#     def run(self, agent_host):
-#         """
-#         Run the agent on the world
-#         :param agent_host: the agent
-#         :return:
-#         """
-#         total_reward = 0
-#         current_reward = 0
-#
-#         self.prev_a = None
-#         self.prev_s = None
-#
-#         is_first_action = True
-#         print('----HERE-----')
-#         # main loop
-#         world_state = agent_host.getWorldState()
-#
-#         while world_state.is_mission_running:
-#             if is_first_action:
-#                 # wait until valid observation is received
-#                 while True:
-#                     time.sleep(0.1)
-#                     world_state = agent_host.getWorldState()
-#
-#                     # for error in world_state.errors:
-#                     #     self.logger.error("Error: %s" % error.text)
-#                     #
-#                     # for reward in world_state.rewards:
-#                     #     current_reward += reward.getValue()
-#
-#                     current_reward = self._update_rewards(world_state, current_reward)
-#
-#                     if world_state.is_mission_running and len(world_state.observations) > 0 and not \
-#                             world_state.observations[-1].text == '{}':
-#                         total_reward += self.act(world_state, agent_host, current_reward)
-#                         break
-#
-#                     if not world_state.is_mission_running:
-#                         break
-#
-#                 is_first_action = False
-#             else:
-#                 # wait for non-zero reward
-#                 while world_state.is_mission_running and current_reward == 0:
-#                     time.sleep(0.1)
-#                     world_state = agent_host.getWorldState()
-#
-#                     # for error in world_state.errors:
-#                     #     self.logger.error("Error: %s" % error.text)
-#                     #
-#                     # for reward in world_state.rewards:
-#                     #     current_reward += reward.getValue()
-#
-#                     current_reward = self._update_rewards(world_state, current_reward)
-#
-#                 # allow time to stabilise after action
-#                 while True:
-#                     time.sleep(0.1)
-#                     world_state = agent_host.getWorldState()
-#
-#                     # for error in world_state.errors:
-#                     #     self.logger.error("Error: %s" % error.text)
-#                     #
-#                     # for reward in world_state.rewards:
-#                     #     current_reward += reward.getValue()
-#
-#                     current_reward = self._update_rewards(world_state, current_reward)
-#
-#                     if world_state.is_mission_running and len(world_state.observations) > 0 and not \
-#                             world_state.observations[-1].text == '{}':
-#                         total_reward += self.act(world_state, agent_host, current_reward)
-#                         break
-#
-#                     if not world_state.is_mission_running:
-#                         break
-#
-#         # process final reward
-#         self.logger.debug("Final reward: %d" % current_reward)
-#
-#         total_reward += current_reward
-#
-#         # update Q values
-#         if self.prev_s is not None and self.prev_a is not None:
-#             self.update_q_table_from_terminating_state(current_reward)
-#
-#         # TODO: implement drawing Q-Table
-#         # self.draw_Q()
-#
-#         return total_reward
-#
-#     def _update_rewards(self, world_state, current_reward):
-#         """
-#         Update current reward with current world state observation
-#         Also update logger with any errors
-#         :param world_state:
-#         :param current_reward:
-#         :return:
-#         """
-#         for error in world_state.errors:
-#             self.logger.error("Error: %s" % error.text)
-#
-#         for reward in world_state.rewards:
-#             current_reward += reward.getValue()
-#
-#         return current_reward
-#
-#     # TODO: implement draw_Q function
-#     # def draw_Q(self, curr_x=None, curr_y=None):
+        Args:
+            steps (list): list of global steps after each episode
+            returns (list): list of total return of each episode
+        """
+        save_path = '/Users/erikgomez/Desktop'
+        box = np.ones(self.log_frequency) / self.log_frequency
+        returns_smooth = np.convolve(self.returns[1:], box, mode='same')
+        plt.clf()
+        plt.plot(self.steps[1:], returns_smooth)
+        plt.title('Farmer: Seed Planting')
+        plt.ylabel('Return')
+        plt.xlabel('Steps')
+        plt.savefig(os.path.join(save_path, 'returns.png'))
+
+        with open(os.path.join(save_path, 'returns.txt'), 'w') as f:
+            for step, value in zip(self.steps[1:], self.returns[1:]):
+                f.write("{}\t{}\n".format(step, value))

@@ -1,4 +1,3 @@
-
 def generate_enclosed_area():
     """
     Generates the enclosed area for the agent which includes:
@@ -17,7 +16,10 @@ def generate_enclosed_area():
         fences += fence_block.format(i, 4)
         fences += fence_block.format(i, -4)
 
-    return fences + farmland
+    # single water block can hydrate 9x9 grid so set it to the middle of our farmland
+    single_water_block = "<DrawBlock x='{}' y='1' z='{}' type='water'/>".format(0, 0)
+
+    return fences + farmland + single_water_block
 
 
 def get_mission_xml():
@@ -41,11 +43,11 @@ def get_mission_xml():
                 </ServerInitialConditions>
               
                 <ServerHandlers>
-                  <FlatWorldGenerator generatorString="3;7,2;1;"/>
+                  <FlatWorldGenerator generatorString="3;7,2;1;" forceReset="true"/>
                   <DrawingDecorator>''' + \
                     generate_enclosed_area() + \
-                  '''</DrawingDecorator>
-                  <ServerQuitFromTimeUp timeLimitMs="10000"/>
+                '''</DrawingDecorator>
+                  <ServerQuitFromTimeUp timeLimitMs="45000"/>
                   <ServerQuitWhenAnyAgentFinishes/>
                 </ServerHandlers>
               </ServerSection>
@@ -55,12 +57,26 @@ def get_mission_xml():
                   <Placement x="0" y="2" z="-3" pitch="45" yaw="0"/>
                     <Inventory>
                       <InventoryItem slot="0" type="diamond_hoe"/>
-                      <InventoryItem slot="1" type="wheat_seeds"/>
+                      <InventoryItem slot="1" type="wheat_seeds" quantity="64"/>
                     </Inventory>
                 </AgentStart>
                 <AgentHandlers>
+                  <RewardForDiscardingItem>
+                    <Item reward="5" type="wheat_seeds"/>
+                  </RewardForDiscardingItem>
+                  <RewardForTouchingBlockType>
+                    <Block reward="-10" type="water" behaviour="onlyOnce"/>
+                  </RewardForTouchingBlockType>
+                  <ContinuousMovementCommands/>
+                  <InventoryCommands/>
                   <ObservationFromFullStats/>
-                  <ContinuousMovementCommands turnSpeedDegs="180"/>
+                  <ObservationFromRay/>
+                  <ObservationFromGrid>
+                    <Grid name="floor3x3">
+                        <min x="-1" y="-1" z="-1"/>
+                        <max x="1" y="-1" z="1"/>
+                    </Grid>
+                  </ObservationFromGrid>
                 </AgentHandlers>
               </AgentSection>
             </Mission>'''
