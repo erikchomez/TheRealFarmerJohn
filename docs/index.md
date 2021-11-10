@@ -3,7 +3,7 @@ layout: default
 title:  Home
 ---
 
-![](https://imgur.com/TYAWx2u)
+![banner](https://i.imgur.com/TYAWx2u.jpeg)
 
 [Source Code](https://github.com/erikchomez/TheRealFarmerJohn/)
 
