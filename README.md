@@ -1,1 +1,1 @@
-# mineGAN
+# TheRealFarmerJohn
