@@ -24,7 +24,7 @@ class Farmer(gym.Env):
         self.reward_density = 0.1
         self.penalty_density = 0.02
         self.obs_size = 3
-        self.max_episode_steps = 2000
+        self.max_episode_steps = 200
         self.log_frequency = 1
 
         self.action_dict = {
@@ -58,8 +58,6 @@ class Farmer(gym.Env):
         self.episode_return = 0
         self.returns = []
         self.steps = []
-        # TODO: use somehow
-        self.iteration_count = 0
 
     def init_malmo(self):
         my_mission = MalmoPython.MissionSpec(uti.get_mission_xml(), True)
@@ -93,6 +91,13 @@ class Farmer(gym.Env):
             for error in world_state.errors:
                 print('\nError: ', error.text)
 
+        # main loop
+        print("Starting To Farm")
+
+        # mission has ended
+        # give mod some time to prepare for next mission
+        time.sleep(0.5)
+
         return world_state
 
     def reset(self):
@@ -109,13 +114,11 @@ class Farmer(gym.Env):
         self.steps.append(current_step + self.episode_step)
         self.episode_return = 0
         self.episode_step = 0
-
+        self.in_water_block = False
         # log
         if len(self.returns) > self.log_frequency + 1 and len(self.returns) % self.log_frequency == 0:
             self.log_returns()
             print('Logging')
-
-        self.iteration_count += 1
 
         # get observation
         self.obs = self.get_observation(world_state)
@@ -140,27 +143,25 @@ class Farmer(gym.Env):
             jump_reward += JUMP_REWARD
             time.sleep(2)
 
-        self.in_water_block = False
-        self.agent_host.sendCommand("jump 0")
-
-        # check if any farmland is in front of agent
-        if any(self.obs[0][:3]) and command_use == "use 1":
-            time.sleep(2)
-            # switch to hotbar.1: wheat seeds
-            self._use_hotbar(2)
-            time.sleep(0.2)
-        # check if any dirt is in front of agent
-        elif any(self.obs[1][:3]) and command_use == "use 1":
-            time.sleep(2)
-            # switch to hotbar.0: diamond hoe
-            self._use_hotbar(1)
-            time.sleep(0.2)
-
+            self.agent_host.sendCommand("jump 0")
         else:
-            time.sleep(0.2)
 
-            self.agent_host.sendCommand(command_move)
-            self.agent_host.sendCommand(command_turn)
+            # check if any farmland is in front of agent
+            if any(self.obs[0][:3]) and command_use == "use 1":
+                # switch to hotbar.1: wheat seeds
+                self._use_hotbar(2)
+
+            # check if any dirt is in front of agent
+            elif any(self.obs[1][:3]) and command_use == "use 1":
+                # switch to hotbar.0: diamond hoe
+                self._use_hotbar(1)
+
+            else:
+
+                self.agent_host.sendCommand(command_move)
+                self.agent_host.sendCommand(command_turn)
+
+        time.sleep(0.2)
 
         self.episode_step += 1
 
@@ -174,11 +175,6 @@ class Farmer(gym.Env):
         # get done
         done = not world_state.is_mission_running
 
-        # check number of steps
-        if self.episode_step == self.max_episode_steps:
-            print('Number of steps: ', self.episode_step)
-            done = True
-
         # get reward
         reward = 0
 
@@ -187,6 +183,8 @@ class Farmer(gym.Env):
 
         self.episode_return += reward
         self.episode_return += jump_reward
+
+        # print("REWARD: ", reward)
 
         return self.obs, reward, done, dict()
 
@@ -240,6 +238,8 @@ class Farmer(gym.Env):
                 # if agent falls into water block
                 if observations['YPos'] == 1.0:
                     self.in_water_block = True
+                else:
+                    self.in_water_block = False
 
                 # print('len grid: ', len(grid))
                 for i, x in enumerate(grid):

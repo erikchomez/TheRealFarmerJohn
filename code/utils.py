@@ -47,7 +47,7 @@ def get_mission_xml():
                   <DrawingDecorator>''' + \
                     generate_enclosed_area() + \
                 '''</DrawingDecorator>
-                  <ServerQuitFromTimeUp timeLimitMs="45000"/>
+                  <ServerQuitFromTimeUp timeLimitMs="100000"/>
                   <ServerQuitWhenAnyAgentFinishes/>
                 </ServerHandlers>
               </ServerSection>
@@ -62,11 +62,12 @@ def get_mission_xml():
                 </AgentStart>
                 <AgentHandlers>
                   <RewardForDiscardingItem>
-                    <Item reward="5" type="wheat_seeds"/>
+                    <Item reward="1" type="wheat_seeds"/>
                   </RewardForDiscardingItem>
                   <RewardForTouchingBlockType>
-                    <Block reward="-10" type="water" behaviour="onlyOnce"/>
+                    <Block reward="-10" type="water"/>
                   </RewardForTouchingBlockType>
+                  <RewardForTimeTaken initialReward="0" delta="0.05" density="MISSION_END"/>
                   <ContinuousMovementCommands/>
                   <InventoryCommands/>
                   <ObservationFromFullStats/>
@@ -77,6 +78,7 @@ def get_mission_xml():
                         <max x="1" y="-1" z="1"/>
                     </Grid>
                   </ObservationFromGrid>
+                  <AgentQuitFromReachingCommandQuota total="200"/>
                 </AgentHandlers>
               </AgentSection>
             </Mission>'''
