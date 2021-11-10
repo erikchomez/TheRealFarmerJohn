@@ -28,7 +28,7 @@ Our team anticipates using curriculum learning and reinforcement learning. For t
 
 ## Evaluation Plan
 
-We plan on evaluating the agent on how much crop it was able to maximize over a certain time frame. We also plan on using a Q-Table to visualize the results at each state.
+We plan on evaluating the agent on how much crop it was able to maximize over a certain time frame. 
 
 ## Appointment with the Instructor
 
