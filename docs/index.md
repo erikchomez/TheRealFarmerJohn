@@ -3,7 +3,7 @@ layout: default
 title:  Home
 ---
 
-Source code: https://github.com/erikchomez/mineGAN/
+Source code: https://github.com/erikchomez/TheRealFarmerJohn/
 
 Reports:
 
