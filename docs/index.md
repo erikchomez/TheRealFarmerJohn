@@ -3,7 +3,7 @@ layout: default
 title:  Home
 ---
 
- <img src="https://github.com/erikchomez/TheRealFarmerJohn/blob/main/docs/images/picture.jpg" width="200">
+ <img src="https://github.com/erikchomez/TheRealFarmerJohn/blob/main/docs/images/picture.jpg" width="500" height="300"/>
 
 [Source Code](https://github.com/erikchomez/TheRealFarmerJohn/)
 
