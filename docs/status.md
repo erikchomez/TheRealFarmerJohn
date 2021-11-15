@@ -47,4 +47,4 @@ For our quantitative evalauation, we decided to use the reward returns from prev
 
 ![banner](https://i.imgur.com/g4p4vk7.png)
 
-![banner2](https://i.imgur.com/VSEnPVW.png)
+![banner2](https://i.imgur.com/av7MP2o.jpeg)
