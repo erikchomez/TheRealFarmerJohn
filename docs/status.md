@@ -5,6 +5,11 @@ title: Status
 
 # {{ page.title }}
 
+## Video
+
+[![Watch the video](https://img.youtube.com/vi/euE9zT-ezas/maxresdefault.jpg)](https://www.youtube.com/watch?v=euE9zT-ezas)
+
+
 ## Summary of the Project
 
 The goal of this project is to train an agent to maximize the amount of crop produced using a combination of reinforcement learning and curriculum learning. The agent starts off with an easy task and gradually the difficulty of each task is increased. The following is a sample curriculum: 
