@@ -43,8 +43,30 @@ As for rewards, we decided to give the agent positive rewards for using and plan
 
 ### Quantitative
 
-For our quantitative evalauation, we decided to use the reward returns from previous episodes to keep track of how our agent is performing. Currently, we have an agent that is able to grow crops on most of the farmland, but we still are seeing the agent fall into the water and recieve a negative reward. We think that playing with the reward scheme would help stabilize the agent. We also trained our agent for a long period of time, and saw similar results. 
+For our quantitative evalauation, we decided to use the reward returns from previous episodes to keep track of how our agent is performing. Currently, we have an agent that is able to grow crops on most of the farmland, but we still are seeing the agent fall into the water and recieve a negative reward. We think that playing with the reward scheme would help stabilize the agent. We also trained our agent for a long period of time, and saw similar results, which can be seen in the second image below.
 
 ![banner](https://i.imgur.com/g4p4vk7.png)
 
 ![banner2](https://i.imgur.com/av7MP2o.jpeg)
+
+## Remaining Goals and Challenges
+
+### Remaining Goals
+
+So far we have only trained the agent on placing seeds in farmland, and also started working on training the agent to hoe dirt into farmland. However, we still need to train the agent to grow the crops and maximize the amount of wheat it can grow. Since we are using a curriculum to train our agent, these first two tasks are part of the easier tasks that we will train our agent on. We plan on fleshing out a curriculum that will allow our agent to train effectively. 
+
+For the following weeks, we plan on stabilizing the training for placing seeds and hoeing dirt. We also plan on creating more complex challenges that will be part of the overall curriculum. Another goal we have in mind is changing the training environment that we place the agent in. Currently we have a closed off environment and give the agent the tools necessary to grow crop. However, we plan on training our agent to be able to grow crop effectively in more complex and unconstrained environments. 
+
+### Challenges
+
+We have ran into a few challenges so far. One being figuring out a reward scheme that works best. We have been unable to stabilize the training to consistently get high rewards for farming land or placing seeds. Either the agent does well, or doesn't move towards the farmland and places seeds. We plan on playing around with the enclosed area to figure out if there is a way we can help the agent avoid falling into the water. Either by changing the negative reward, or placing a block that can rest over the water and still allow the agent to move over it. Something like slab might work for us. 
+
+Giving rewards to the agent is another challenge we have come across. For instance, Malmo has the ability to reward the agent for a few actions, however, there is no reward endpoint for using an item. So figuring out how to reward our agent for hoeing dirt has been difficult compared to placing seeds (which has an endpoint RewardForDiscardingItem). Additionally, if the agent does get stuck in the water block, there is no reward for jumping so although we can give a negative reward for touching a water block, we still have to penalize the agent for jumping out. We think that combining the two actions' rewards could work in this situation. 
+
+## Resources Used
+
+We used Assignment 2 and modified it for our project. We also used Malmo's XML schema documentation and project documentation. 
+
+[XML Schema Documentation](https://microsoft.github.io/malmo/0.21.0/Schemas/MissionHandlers.html)
+
+[Project Documentation](https://microsoft.github.io/malmo/0.30.0/Documentation/index.html)
