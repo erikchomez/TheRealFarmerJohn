@@ -1,4 +1,4 @@
-from Farmer import Farmer
+from agents.farmer import Farmer
 import ray
 from ray.rllib.agents import ppo
 from pathlib import Path
@@ -14,7 +14,7 @@ if __name__ == '__main__':
         'num_workers': 0
     })
 
-    user_input = input("Use last checkpoint [y/n]? ")
+    user_input = 'n'
 
     if user_input.lower() == 'y':
         while True:
