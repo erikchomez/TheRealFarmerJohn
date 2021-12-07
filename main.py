@@ -2,7 +2,14 @@ from agents.farmer import Farmer
 import ray
 from ray.rllib.agents import ppo
 from pathlib import Path
+import threading
 import os
+
+
+def train(trainer: ppo.PPOTrainer):
+    while True:
+        trainer.train()
+
 
 if __name__ == '__main__':
     ray.init()
@@ -29,12 +36,14 @@ if __name__ == '__main__':
 
     current_directory = Path(__file__).parent.absolute()
 
-    i = 0
+    training_thread = threading.Thread(target=lambda: train(trainer), daemon=False)
+    training_thread.start()
     while True:
-        print(trainer.train())
-
-        i += 1
-        if i % 2 == 0:
+        cmd = input("ml_console > ")
+        if cmd == "save":
             checkpoint = trainer.save_checkpoint(current_directory)
-            print("Checkpoint saved at ", checkpoint)
-
+            print(f"Checkpoint saved as {checkpoint}")
+        elif cmd == "exit":
+            print("Ending main.py...")
+            training_thread.join()
+            break

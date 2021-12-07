@@ -42,9 +42,7 @@ class WorldGenerator:
         tilled soil, and water. String returned
         is Malmo-friendly XML.
         """
-        wasteland_xml = f"{self._rand_blocks(size=size, height=1, density=density, block_type='farmland')}" + \
-                        f"{self._rand_blocks(size=size, height=1, density=density, block_type='water')}" + \
-                        f"{self._rand_blocks(size=size, height=1, density=density, block_type='dirt')}"
+        wasteland_xml = f"{self._rand_blocks(size=size, height=1, density=density, block_type='dirt')}"
         return wasteland_xml
 
     @staticmethod
@@ -78,6 +76,10 @@ class WorldGenerator:
                   <About>
                     <Summary>RL + Curriculum Learning</Summary>
                   </About>
+                  
+                  <ModSettings>
+                    <MsPerTick>1</MsPerTick>
+                  </ModSettings>
     
                   <ServerSection>
                     <ServerInitialConditions>
@@ -103,6 +105,10 @@ class WorldGenerator:
                         <Inventory>
                           <InventoryItem slot="0" type="diamond_hoe"/>
                           <InventoryItem slot="1" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="2" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="3" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="4" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="5" type="wheat_seeds" quantity="64"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
@@ -122,7 +128,6 @@ class WorldGenerator:
                             <max x="1" y="-1" z="1"/>
                         </Grid>
                       </ObservationFromGrid>
-                      <AgentQuitFromReachingCommandQuota total="200"/>
                     </AgentHandlers>
                   </AgentSection>
                 </Mission>'''

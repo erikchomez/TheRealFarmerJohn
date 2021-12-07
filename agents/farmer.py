@@ -6,7 +6,8 @@ except:
 import json
 # import logging
 import sys
-# import random
+import random
+import math
 from generation.utils import WorldGenerator
 import time
 import gym
@@ -22,17 +23,19 @@ class Farmer(gym.Env):
         self.reward_density = 0.1
         self.penalty_density = 0.02
         self.obs_size = 3
-        self.max_episode_steps = 200
+        self.max_episode_steps = 500
         self.log_frequency = 1
 
         self.world_gen = WorldGenerator()
         self.save_path = '/home/marcelo/MalmoPlatform/build/install/Python_Examples/returns'
+        self.debug = True
 
         self.action_dict = {
             0: 'move 1',
             1: 'turn 1',
             2: 'use 1',
-            3: 'jump 1'
+            3: 'jump 1',
+            4: 'switch 1'
         }
 
         # Rllib parameters
@@ -86,18 +89,14 @@ class Farmer(gym.Env):
         world_state = self.agent_host.getWorldState()
 
         while not world_state.has_mission_begun:
-            time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
 
             for error in world_state.errors:
                 print('\nError: ', error.text)
 
         # main loop
-        print("Starting To Farm")
-
-        # mission has ended
-        # give mod some time to prepare for next mission
-        time.sleep(0.5)
+        if self.debug:
+            print("Starting To Farm")
 
         return world_state
 
@@ -119,7 +118,8 @@ class Farmer(gym.Env):
         # log
         if len(self.returns) > self.log_frequency + 1 and len(self.returns) % self.log_frequency == 0:
             self.log_returns()
-            print('Logging')
+            if self.debug:
+                print('Logging')
 
         # get observation
         self.obs = self.get_observation(world_state)
@@ -146,7 +146,7 @@ class Farmer(gym.Env):
             # check if any farmland is in front of agent
             if any(self.obs[0][:3]) and command_use == "use 1":
                 # switch to hotbar.1: wheat seeds
-                self._use_hotbar(2)
+                self._use_hotbar(random.randint(2, 6))
 
             # check if any dirt is in front of agent
             elif any(self.obs[1][:3]) and command_use == "use 1":
@@ -158,12 +158,13 @@ class Farmer(gym.Env):
                 self.agent_host.sendCommand(command_move)
                 self.agent_host.sendCommand(command_turn)
 
-        time.sleep(0.2)
+        #time.sleep(0.04)
         self.episode_step += 1
         world_state = self.agent_host.getWorldState()
 
         for error in world_state.errors:
-            print('Error: ', error.text)
+            if self.debug:
+                print('Error: ', error.text)
 
         self.obs = self.get_observation(world_state)
 
@@ -206,7 +207,7 @@ class Farmer(gym.Env):
 
         obs = np.zeros((2, self.obs_size * self.obs_size))
         while world_state.is_mission_running:
-            time.sleep(0.1)
+            #time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
             if len(world_state.errors) > 0:
                 raise AssertionError('Could not load grid')
