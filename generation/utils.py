@@ -78,7 +78,7 @@ class WorldGenerator:
                   </About>
                   
                   <ModSettings>
-                    <MsPerTick>1</MsPerTick>
+                    <MsPerTick>10</MsPerTick>
                   </ModSettings>
     
                   <ServerSection>

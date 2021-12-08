@@ -17,20 +17,18 @@ if __name__ == '__main__':
     trainer = ppo.PPOTrainer(env=Farmer, config={
         'env_config': {},  # No environment parameters to configure
         'framework': 'torch',  # Use pyotrch instead of tensorflow
-        'num_gpus': 0,  # We aren't using GPUs
+        'num_gpus': 0,
         'num_workers': 0
     })
 
-    user_input = 'n'
+    user_input = input("Use checkpoint? (y/n)")
 
     if user_input.lower() == 'y':
         while True:
             dir_path = input("Training path data: ")
-
             if os.path.exists(dir_path):
                 trainer.load_checkpoint(dir_path)
                 break
-
             else:
                 print("Invalid path: ", dir_path)
 

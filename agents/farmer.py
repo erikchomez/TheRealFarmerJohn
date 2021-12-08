@@ -133,32 +133,15 @@ class Farmer(gym.Env):
         command_use = "use 1" if action[2] > 0.5 else "use 0"
         command_jump = "jump 1" if action[3] > 0.5 else "jump 0"
 
-        # check if agent is stuck in water
-        if self.in_water_block:
-            print("STUCK IN WATER BLOCK")
-            self.agent_host.sendCommand("jump 1")
-            self.agent_host.sendCommand("move 1")
-            time.sleep(2)
+        item_slot = math.ceil(abs(action[4]) * 10)
+        if item_slot > 9:
+            item_slot = 9
 
-            self.agent_host.sendCommand("jump 0")
-        else:
+        self._use_hotbar(item_slot)
+        self.agent_host.sendCommand(command_move)
+        self.agent_host.sendCommand(command_turn)
+        time.sleep(0.02) # sleep for 20 ticks, which is normally 1 second
 
-            # check if any farmland is in front of agent
-            if any(self.obs[0][:3]) and command_use == "use 1":
-                # switch to hotbar.1: wheat seeds
-                self._use_hotbar(random.randint(2, 6))
-
-            # check if any dirt is in front of agent
-            elif any(self.obs[1][:3]) and command_use == "use 1":
-                # switch to hotbar.0: diamond hoe
-                self._use_hotbar(1)
-
-            else:
-
-                self.agent_host.sendCommand(command_move)
-                self.agent_host.sendCommand(command_turn)
-
-        #time.sleep(0.04)
         self.episode_step += 1
         world_state = self.agent_host.getWorldState()
 
@@ -172,18 +155,16 @@ class Farmer(gym.Env):
         done = not world_state.is_mission_running
 
         # get reward
-        reward = 0
+        step_reward = 0
         for r in world_state.rewards:
-            reward += r.getValue()
-            # normalize rewards
+            reward = r.getValue()
             if reward > 0:
                 reward = 1
-            elif reward < 0 and not self.in_water_block:
-                reward = 0
+                print("Planted seed")
+            step_reward += reward
+        self.episode_return += step_reward
 
-        self.episode_return += reward
-
-        return self.obs, reward, done, dict()
+        return self.obs, step_reward, done, dict()
 
     def _use_hotbar(self, hotbar_key):
         """
@@ -207,7 +188,6 @@ class Farmer(gym.Env):
 
         obs = np.zeros((2, self.obs_size * self.obs_size))
         while world_state.is_mission_running:
-            #time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
             if len(world_state.errors) > 0:
                 raise AssertionError('Could not load grid')
