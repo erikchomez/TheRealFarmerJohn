@@ -115,9 +115,9 @@ class WorldGenerator:
                       <RewardForDiscardingItem>
                         <Item reward="1" type="wheat_seeds"/>
                       </RewardForDiscardingItem>
-                      <RewardForTouchingBlockType>
-                        <Block reward="-1" type="water"/>
-                      </RewardForTouchingBlockType>
+                      <RewardForCollectingItem>
+                        <Item reward="-1" type="wheat_seeds"/>
+                      </RewardForCollectingItem>
                       <ContinuousMovementCommands/>
                       <InventoryCommands/>
                       <ObservationFromFullStats/>

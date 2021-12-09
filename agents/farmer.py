@@ -35,7 +35,8 @@ class Farmer(gym.Env):
             1: 'turn 1',
             2: 'use 1',
             3: 'jump 1',
-            4: 'switch 1'
+            4: 'switch 1',
+            5: 'attack 1'
         }
 
         # Rllib parameters
@@ -130,16 +131,19 @@ class Farmer(gym.Env):
         # get action
         command_move = "move " + str(action[0])
         command_turn = "turn " + str(action[1])
-        command_use = "use 1" if action[2] > 0.5 else "use 0"
+        command_attack = "attack 1" if action[5] > 0.5 else "attack 0"
         command_jump = "jump 1" if action[3] > 0.5 else "jump 0"
 
+        # Use command
         item_slot = math.ceil(abs(action[4]) * 10)
         if item_slot > 9:
             item_slot = 9
-
         self._use_hotbar(item_slot)
+
         self.agent_host.sendCommand(command_move)
         self.agent_host.sendCommand(command_turn)
+        #self.agent_host.sendCommand(command_jump)
+        self.agent_host.sendCommand(command_attack)
         time.sleep(0.02) # sleep for 20 ticks, which is normally 1 second
 
         self.episode_step += 1
@@ -160,7 +164,8 @@ class Farmer(gym.Env):
             reward = r.getValue()
             if reward > 0:
                 reward = 1
-                print("Planted seed")
+            else:
+                reward = -10
             step_reward += reward
         self.episode_return += step_reward
 
