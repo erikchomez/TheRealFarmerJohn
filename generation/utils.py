@@ -13,28 +13,17 @@ class WorldGenerator:
         pass
 
     @staticmethod
-    def generate_enclosed_area():
-        """
-        Generates the enclosed area for the agent which includes:
-        5x5 grid of farmland
-        Fences surrounding farmland with 1 block gap
-        """
-        # reset "<DrawCuboid x1='{}' x2='{}' y1='2' y2='2' z1='{}' z2='{}' type='air'/>".format(-4, 4, -4, 4) + \
-        farmland = "<DrawCuboid x1='{}' x2='{}' y1='1' y2='1' z1='{}' z2='{}' type='farmland'/>".format(-2, 2, -2, 2)
-
+    def generate_enclosed_area(size: int) -> str:
         fence_block = "<DrawBlock x='{}' y='2' z='{}' type='fence'/>"
         fences = ''
 
-        for i in range(-4, 5):
-            fences += fence_block.format(-4, i)
-            fences += fence_block.format(4, i)
-            fences += fence_block.format(i, 4)
-            fences += fence_block.format(i, -4)
+        for i in range(-1 * size, size):
+            fences += fence_block.format(-1 * size, i)
+            fences += fence_block.format(size, i)
+            fences += fence_block.format(i, size)
+            fences += fence_block.format(i, -1 * size)
 
-        # single water block can hydrate 9x9 grid so set it to the middle of our farmland
-        single_water_block = "<DrawBlock x='{}' y='1' z='{}' type='water'/>".format(0, 0)
-
-        return fences + farmland + single_water_block
+        return fences
 
     def gen_fertile_wasteland(self, size: int, density: int) -> str:
         """

@@ -34,7 +34,7 @@ class Farmer(gym.Env):
             0: 'move 1',
             1: 'turn 1',
             2: 'use 1',
-            3: 'jump 1',
+            3: 'strafe 1',
             4: 'switch 1',
             5: 'attack 1'
         }
@@ -66,7 +66,8 @@ class Farmer(gym.Env):
 
     def init_malmo(self):
         world = self.world_gen.gen_fertile_wasteland(self.size, self.reward_density)
-        my_mission = MalmoPython.MissionSpec(self.world_gen.get_mission_xml(world), True)
+        fences = self.world_gen.generate_enclosed_area(random.randint(20,50))
+        my_mission = MalmoPython.MissionSpec(self.world_gen.get_mission_xml(world + fences), True)
         my_mission_record = MalmoPython.MissionRecordSpec()
         my_mission.requestVideo(800, 500)
         my_mission.setViewpoint(1)
@@ -131,8 +132,8 @@ class Farmer(gym.Env):
         # get action
         command_move = "move " + str(action[0])
         command_turn = "turn " + str(action[1])
+        command_strafe = "strafe " + str(action[3])
         command_attack = "attack 1" if action[5] > 0.5 else "attack 0"
-        command_jump = "jump 1" if action[3] > 0.5 else "jump 0"
 
         # Use command
         item_slot = math.ceil(abs(action[4]) * 10)
@@ -142,7 +143,7 @@ class Farmer(gym.Env):
 
         self.agent_host.sendCommand(command_move)
         self.agent_host.sendCommand(command_turn)
-        #self.agent_host.sendCommand(command_jump)
+        self.agent_host.sendCommand(command_strafe)
         self.agent_host.sendCommand(command_attack)
         time.sleep(0.02) # sleep for 20 ticks, which is normally 1 second
 
