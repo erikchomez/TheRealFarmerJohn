@@ -129,6 +129,7 @@ class WorldGenerator:
                       <InventoryCommands/>
                       <ObservationFromFullStats/>
                       <ObservationFromRay/>
+                      <ObservationFromHotBar/>
                       <ObservationFromGrid>
                         <Grid name="floor3x3">
                             <min x="-1" y="-1" z="-1"/>

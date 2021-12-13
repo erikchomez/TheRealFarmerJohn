@@ -159,17 +159,20 @@ class Farmer(gym.Env):
                 print('Error: ', error.text)
 
         self.obs = self.get_observation(world_state)
+        wheat_return = self.calculate_num_of_wheat(world_state)
+        if wheat_return is not None:
+            self.episode_return = wheat_return
 
         # get done
         done = not world_state.is_mission_running
 
         # get reward
         step_reward = 0
-        for r in world_state.rewards:
+        """for r in world_state.rewards:
             reward = r.getValue()
             step_reward += reward
         self.episode_return += step_reward
-
+"""
         return self.obs, step_reward, done, dict()
 
     def _use_hotbar(self, hotbar_key):
@@ -185,6 +188,20 @@ class Farmer(gym.Env):
 
         # send command to use item in hotbar
         self.agent_host.sendCommand("use 1")
+
+    def calculate_num_of_wheat(self, world_state):
+        num = 0
+        while world_state.is_mission_running:
+            world_state = self.agent_host.getWorldState()
+            if world_state.number_of_observations_since_last_state > 0:
+                msg = world_state.observations[-1].text
+                observations = json.loads(msg)
+                for attr in observations:
+                    if "Hotbar" in attr:
+                        hotbar = attr[:-4]
+                        if attr[9:] == "size" and observations[hotbar + "item"] == "wheat":
+                            num += observations[attr]
+                return num
 
     def get_observation(self, world_state):
         """
