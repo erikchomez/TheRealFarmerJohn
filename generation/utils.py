@@ -120,7 +120,7 @@ class WorldGenerator:
                         <Item reward="1" type="wheat"/>
                       </RewardForCollectingItem>
                       <RewardForTouchingBlockType>
-                        <Block type="cobblestone" reward="-100"></Block>
+                        <Block type="cobblestone" reward="-1"></Block>
                       </RewardForTouchingBlockType>
                       <AgentQuitFromTouchingBlockType>
                         <Block type="cobblestone"/>
