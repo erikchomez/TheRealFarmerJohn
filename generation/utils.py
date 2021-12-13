@@ -13,15 +13,15 @@ class WorldGenerator:
         pass
 
     @staticmethod
-    def generate_enclosed_area(size: int) -> str:
-        fence_block = "<DrawBlock x='{}' y='2' z='{}' type='fence'/>"
+    def generate_enclosed_area(size: int, block_type: str) -> str:
+        fence_block = "<DrawBlock x='{}' y='2' z='{}' type='{}'/>"
         fences = ''
 
         for i in range(-1 * size, size):
-            fences += fence_block.format(-1 * size, i)
-            fences += fence_block.format(size, i)
-            fences += fence_block.format(i, size)
-            fences += fence_block.format(i, -1 * size)
+            fences += fence_block.format(-1 * size + 1, i + 1, block_type)
+            fences += fence_block.format(size, i + 1, block_type)
+            fences += fence_block.format(i + 1, size, block_type)
+            fences += fence_block.format(i + 1, -1 * size + 1, block_type)
 
         return fences
 
@@ -31,8 +31,14 @@ class WorldGenerator:
         tilled soil, and water. String returned
         is Malmo-friendly XML.
         """
-        wasteland_xml = f"{self._rand_blocks(size=size, height=1, density=density, block_type='dirt')}"
+        wasteland_xml = f"{self._rand_blocks(size=size, height=1, density=density, block_type='water')}"
         return wasteland_xml
+
+    def gen_fertile_land(self, size: int):
+        fertile_xml = str()
+        fertile_xml += self._generate_grid(size, 2, 'water')
+        fertile_xml += self._generate_grid(size, 3, 'grass')
+        return fertile_xml
 
     @staticmethod
     def _rand_blocks(size: int, height: int, density: int, block_type: str) -> str:
@@ -52,6 +58,15 @@ class WorldGenerator:
         return cuboid_xml
 
     @staticmethod
+    def _generate_grid(size: int, height: int, block_type: str):
+        rand_grid = np.random.rand(size, size)
+        cuboid_xml = str()
+        for x, row in enumerate(rand_grid):
+            for y, val in enumerate(row):
+                cuboid_xml += f"<DrawBlock x='{x - size // 2}' y='{height}' z='{y - size // 2}' type='{block_type}'/>\n "
+        return cuboid_xml
+
+    @staticmethod
     def get_mission_xml(custom_land: str):
         """
         Generate a flat plane of grass in Malmo
@@ -67,7 +82,7 @@ class WorldGenerator:
                   </About>
                   
                   <ModSettings>
-                    <MsPerTick>10</MsPerTick>
+                    <MsPerTick>1</MsPerTick>
                   </ModSettings>
     
                   <ServerSection>
@@ -83,7 +98,7 @@ class WorldGenerator:
                       <DrawingDecorator>''' + \
                         f"{custom_land}" + \
                '''</DrawingDecorator>
-                      <ServerQuitFromTimeUp timeLimitMs="100000"/>
+                      <ServerQuitFromTimeUp timeLimitMs="5500000"/>
                       <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
                   </ServerSection>
@@ -101,12 +116,15 @@ class WorldGenerator:
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
-                      <RewardForDiscardingItem>
-                        <Item reward="1" type="wheat_seeds"/>
-                      </RewardForDiscardingItem>
                       <RewardForCollectingItem>
-                        <Item reward="-1" type="wheat_seeds"/>
+                        <Item reward="1" type="wheat"/>
                       </RewardForCollectingItem>
+                      <RewardForTouchingBlockType>
+                        <Block type="cobblestone" reward="-100"></Block>
+                      </RewardForTouchingBlockType>
+                      <AgentQuitFromTouchingBlockType>
+                        <Block type="cobblestone"/>
+                      </AgentQuitFromTouchingBlockType>
                       <ContinuousMovementCommands/>
                       <InventoryCommands/>
                       <ObservationFromFullStats/>

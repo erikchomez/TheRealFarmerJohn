@@ -34,7 +34,7 @@ class Farmer(gym.Env):
             0: 'move 1',
             1: 'turn 1',
             2: 'use 1',
-            3: 'strafe 1',
+            3: 'jump 1',
             4: 'switch 1',
             5: 'attack 1'
         }
@@ -65,9 +65,12 @@ class Farmer(gym.Env):
         self.steps = []
 
     def init_malmo(self):
-        world = self.world_gen.gen_fertile_wasteland(self.size, self.reward_density)
-        fences = self.world_gen.generate_enclosed_area(random.randint(20,50))
-        my_mission = MalmoPython.MissionSpec(self.world_gen.get_mission_xml(world + fences), True)
+        size = 10
+        world = self.world_gen.gen_fertile_wasteland(size, 0.5)
+        fences = self.world_gen.generate_enclosed_area(size, 'fence')
+        border = self.world_gen.generate_enclosed_area(size + 1, 'cobblestone')
+        border += self.world_gen.generate_enclosed_area(size + 2, 'cobblestone')
+        my_mission = MalmoPython.MissionSpec(self.world_gen.get_mission_xml(world + fences + border), True)
         my_mission_record = MalmoPython.MissionRecordSpec()
         my_mission.requestVideo(800, 500)
         my_mission.setViewpoint(1)
@@ -111,6 +114,7 @@ class Farmer(gym.Env):
         world_state = self.init_malmo()
 
         # reset variables
+        self.agent_host.sendCommand('/effect @a 23 99999 10')  # disable hunger
         self.returns.append(self.episode_return)
         current_step = self.steps[-1] if len(self.steps) > 0 else 0
         self.steps.append(current_step + self.episode_step)
@@ -132,7 +136,7 @@ class Farmer(gym.Env):
         # get action
         command_move = "move " + str(action[0])
         command_turn = "turn " + str(action[1])
-        command_strafe = "strafe " + str(action[3])
+        command_jump = "jump 1" if action[3] > 0.5 else "jump 0"
         command_attack = "attack 1" if action[5] > 0.5 else "attack 0"
 
         # Use command
@@ -143,9 +147,9 @@ class Farmer(gym.Env):
 
         self.agent_host.sendCommand(command_move)
         self.agent_host.sendCommand(command_turn)
-        self.agent_host.sendCommand(command_strafe)
+        self.agent_host.sendCommand(command_jump)
         self.agent_host.sendCommand(command_attack)
-        time.sleep(0.02) # sleep for 20 ticks, which is normally 1 second
+        time.sleep(0.002) # sleep for 20 ticks, which is normally 1 second
 
         self.episode_step += 1
         world_state = self.agent_host.getWorldState()
@@ -163,10 +167,6 @@ class Farmer(gym.Env):
         step_reward = 0
         for r in world_state.rewards:
             reward = r.getValue()
-            if reward > 0:
-                reward = 1
-            else:
-                reward = -10
             step_reward += reward
         self.episode_return += step_reward
 
