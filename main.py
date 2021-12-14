@@ -1,4 +1,4 @@
-from agents.farmer import Farmer
+from farmer import Farmer
 import ray
 from ray.rllib.agents import ppo
 from pathlib import Path
