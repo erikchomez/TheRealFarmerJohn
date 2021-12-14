@@ -131,10 +131,65 @@ body of water, its observation space would be filled with water and it would giv
 Lesson 4 may have been too much for our agent, due to the challenges presented
 in the previous lesson. The agent was overfitted, and as a result didn't like planting anything
 due to the punishments being weighted more than the rewards.
-
+### Bills Curriculum TBD
 ## Evaluation
+### Quantitative
+From a quantitative standpoint, our agent was able to harvest over a stack of wheat
+(64 units, maximum per item slot) as it progressed in its last lesson in the second
+curriculum. Our baseline agent was only able to harvest a few wheat, in random
+intervals, so it's clear that our trained agent was able to learn through its 
+curriculum.
+### Qualitative
+There are several improvements that our agent could use.
 
+One of the most wasteful behaviors of our agent is that it doesn't optimize
+for tool durability. As a result, it sometimes breaks the hoe, despite the
+fact that the hoe has enough durability to plant all of the seeds. If we were to
+deploy our agent in any useful capacity, we would have to find a way to reward/punish
+the agent for tool usage.
 
+Another inherent aspect to farming is time; the agent needs to take care of itself
+during the farming process. Since farming takes days, the agent almost starves to
+death on every mission, especially if it's jumping a lot. To improve this, we could
+start the agent off with some food, and reward it for eating if its hungry. Or, if we
+decided to implement AI, we could just tell it to eat when its hungry.
+
+Despite these areas that could be improved, our agent did start to produce higher quality
+results.
+
+We have observed that as our agent progresses, it has
+started to learn to cluster food closer together (as opposed to randomly scattering it
+across the map). We expect that as the agent continues to learn, it will start to
+produce higher quality farmland, which more closely resembles that of a real
+player.
+
+Surprisingly, the agent also taught us something. It's more efficient to harvest
+wheat by jumping on it than breaking it. Our agent, in its last lesson, learned that 
+breaking wheat, then walking over to pick it up, takes too much time. Jumping on wheat
+directly below the agent allows it to  take the wheat immediately, which is faster.
+
+### Malmo's Limits
+Malmo was not easy to work with. Teaching an agent to farm took a lot of time, and
+with millions of steps, it was necessary for us to speed up the ticks in order to
+get any usable results in 10 weeks.
+
+Speeding up the ticks to anything besides 20ms (the default) caused the Malmo/Minecraft
+server to fall behind updating, which led to most of the reward signals
+not functioning. Additionally, Malmo's reward system is bugged: a reward
+of 1 for collecting seeds triggers a reward of 64, if the agent has at least 64
+seeds in its inventory.
+
+To get past this, we had to implement many of our own changes that either
+normalize Malmo's rewards, or bypassed them entirely. The only problem with normalizing
+rewards is that we couldn't distinguish between the agent collecting seeds, or wheat.
+This effectively killed the agent's learning chances in the first curriculum, and made
+all subsequent missions more difficult.
+
+For the second curriculum, we implemented our own rewards system that added the
+hotbar as an observation space, and programmatically rewarded the agent if it
+harvested wheat. Many of the challenges we faced outside of designing the environment
+were caused by Malmo, but we were able to successfully finish training our agent
+anyway.
 ## References
 
 We used Assignment 2 and modified it for our project. We also used Malmo's XML schema documentation and project documentation. 
