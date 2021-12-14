@@ -89,6 +89,8 @@ The lessons were as followed:
     * *The agent converged to ~125 seeds planted in about 1 million steps.
    Behavior included the agent jumping and moving diagonally backward while
    tilling the ground and planting seeds*
+    ![](https://raw.githubusercontent.com/erikchomez/TheRealFarmerJohn/jskwon2/docs/images/m_returns_seeds.png)
+      
 2. Plant as many seeds as possible, without getting stuck in walls
     * Environment: Flat grass plane enclosed with fences 50 blocks on any side
     * Rewards: +1 for discarding seeds
@@ -96,6 +98,8 @@ The lessons were as followed:
     * *Agent was already good at planting, got stuck in walls in the beginning
    but eventually learned how to turn and plant along walls. Didn't stop on crops
    too often.*
+      ![](https://raw.githubusercontent.com/erikchomez/TheRealFarmerJohn/jskwon2/docs/images/m_returns_walls.png)
+
 3. Plant as many seeds as possible in an enclosed space, with water
     * Environment: Flat grass plane enclosed with fences, with water randomly generated inside
     * Rewards: +1 for discarding seeds
@@ -103,12 +107,14 @@ The lessons were as followed:
     * *Agent struggled to learn how to utilize jumping effectively, but eventually converged to
    around 0, planting crops without jumping on them, but not
    planting as many as it did in previous trials.*
+      ![](https://raw.githubusercontent.com/erikchomez/TheRealFarmerJohn/jskwon2/docs/images/m_returns_water.png)
 4. Harvest wheat
     * Environment: Same as trial 3
     * Rewards: +1 for harvesting wheat
     * Punishments: None
     * *Agent planted a lot of seeds and waited in water, but didn't know how to harvest wheat, even when
    standing next to fully grown wheat*
+      ![](https://raw.githubusercontent.com/erikchomez/TheRealFarmerJohn/jskwon2/docs/images/m_returns_wheat.png)
 
 Looking at the graphs, it's clear that the first lesson was likely around a good
 difficulty for our agent to master. Though graph 2 doesn't show the full training returns,
@@ -125,7 +131,9 @@ body of water, its observation space would be filled with water and it would giv
 Lesson 4 may have been too much for our agent, due to the challenges presented
 in the previous lesson. The agent was overfitted, and as a result didn't like planting anything
 due to the punishments being weighted more than the rewards.
+
 ## Evaluation
+
 
 ## References
 
