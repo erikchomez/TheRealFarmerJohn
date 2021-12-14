@@ -63,7 +63,7 @@ in the approaches section of this document.
 ## Approaches
 Our team decided to take two approaches for training our agent through curriculum learning.
 ### Sequential Learning
-One of the approaches involved teaching our agent the
+One of the approaches involved teaching our agent the 
 
 ## Evaluation
 

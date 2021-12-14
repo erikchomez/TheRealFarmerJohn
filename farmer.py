@@ -117,10 +117,10 @@ class Farmer(gym.Env):
 
         # reset variables
         self.agent_host.sendCommand('/effect @a 23 99999 10')  # disable hunger
-        self.returns.append(self.num_wheat)
+        self.returns.append(self.episode_return)
         current_step = self.steps[-1] if len(self.steps) > 0 else 0
         self.steps.append(current_step + self.episode_step)
-        self.num_wheat = 0
+        self.episode_return = 0
         self.episode_step = 0
         self.in_water_block = False
         # log
@@ -168,7 +168,7 @@ class Farmer(gym.Env):
         # get reward
         num_wheat = self._calculate_num_of_wheat(world_state)
         if num_wheat is not None:
-            self.num_wheat = num_wheat
+            self.episode_return = num_wheat
         step_reward = 0
 
         return self.obs, step_reward, done, dict()
