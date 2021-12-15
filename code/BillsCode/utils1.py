@@ -13,36 +13,26 @@ class WorldGenerator:
         pass
 
     @staticmethod
-    def generate_enclosed_area(size: int, block_type: str, height: int) -> str:
-        fence_block = "<DrawBlock x='{}' y='{}' z='{}' type='{}'/>"
+    def generate_enclosed_area(size: int, block_type: str) -> str:
+        fence_block = "<DrawBlock x='{}' y='2' z='{}' type='{}'/>"
         fences = ''
 
         for i in range(-1 * size, size):
-            fences += fence_block.format(-1 * size + 1, height, i + 1, block_type)
-            fences += fence_block.format(size, height, i + 1, block_type)
-            fences += fence_block.format(i + 1, height, size, block_type)
-            fences += fence_block.format(i + 1, height, -1 * size + 1, block_type)
+            fences += fence_block.format(-1 * size + 1, i + 1, block_type)
+            fences += fence_block.format(size, i + 1, block_type)
+            fences += fence_block.format(i + 1, size, block_type)
+            fences += fence_block.format(i + 1, -1 * size + 1, block_type)
 
         return fences
 
     def gen_fertile_wasteland(self, size: int, density: int) -> str:
         """
-        Generate a plane of land that contains dirt
-        and water. String returned
+        Generate a plane of land that contains dirt,
+        tilled soil, and water. String returned
         is Malmo-friendly XML.
         """
         wasteland_xml = f"{self._rand_blocks(size=size, height=1, density=density, block_type='water')}"
         return wasteland_xml
-
-    def gen_island(self, size: int) -> str:
-        """
-        Generate the final island.
-        """
-        island_xml = self.generate_enclosed_area(size-1, 'water', '1')
-        island_xml += self.generate_enclosed_area(1, 'water', '1')
-        island_xml += self.generate_enclosed_area(2, 'water', '1')
-        island_xml += self.generate_enclosed_area(3, 'water', '1')
-        return island_xml
 
     def gen_fertile_land(self, size: int):
         fertile_xml = str()
@@ -56,6 +46,7 @@ class WorldGenerator:
         Generate a plane of random blocks (height,
         type, and density defined in parameters)
         in a square of size (size*size).
+
         Return proper Malmo XML to generate said blocks.
         """
         rand_grid = np.random.rand(size, size)
@@ -121,12 +112,24 @@ class WorldGenerator:
                           <InventoryItem slot="1" type="wheat_seeds" quantity="64"/>
                           <InventoryItem slot="2" type="wheat_seeds" quantity="64"/>
                           <InventoryItem slot="3" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="4" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="5" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="6" type="wheat_seeds" quantity="64"/>
+                          <InventoryItem slot="7" type="wheat_seeds" quantity="64"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
+                      <RewardForDiscardingItem>
+                        <Item reward="2" type="wheat_seeds"/>
+                      </RewardForDiscardingItem>
                       <RewardForCollectingItem>
-                        <Item reward="1" type="wheat"/>
+                        <Item reward="100" type="wheat"/>
+                        <Item reward="-5" type="wheat_seeds"/>
+                        <Item reward="-1" type="dirt"/>
                       </RewardForCollectingItem>
+                      <RewardForTouchingBlockType>
+                        <Block reward="-10" type="water"/>
+                      </RewardForTouchingBlockType>
                       <AgentQuitFromTouchingBlockType>
                         <Block type="cobblestone"/>
                       </AgentQuitFromTouchingBlockType>
@@ -134,7 +137,6 @@ class WorldGenerator:
                       <InventoryCommands/>
                       <ObservationFromFullStats/>
                       <ObservationFromRay/>
-                      <ObservationFromHotBar/>
                       <ObservationFromGrid>
                         <Grid name="floorAll">
                           <min x="-'''+str(int(obs_size/2))+'''" y="-1" z="-'''+str(int(obs_size/2))+'''"/>

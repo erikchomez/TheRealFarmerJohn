@@ -19,13 +19,12 @@ import matplotlib.pyplot as plt
 
 class Farmer(gym.Env):
     def __init__(self, env_config):
-        self.size = 25
+        self.size = 50
         self.reward_density = 0.1
         self.penalty_density = 0.02
         self.obs_size = 5
         self.max_episode_steps = 500
         self.log_frequency = 1
-        self.num_wheat = 0
 
         self.world_gen = WorldGenerator()
         self.save_path = '\Malmo\proj'
@@ -43,7 +42,7 @@ class Farmer(gym.Env):
         # Rllib parameters
         # self.action_space = Discrete(len(self.action_dict))
         self.action_space = Box(-1, 1, shape=(len(self.action_dict),), dtype=np.float32)
-        self.observation_space = Box(0, 1, shape=(2 * self.obs_size * self.obs_size,), dtype=np.float32)
+        self.observation_space = Box(0, 1, shape=(2 * self.obs_size * self.obs_size, ), dtype=np.float32)
 
         # Malmo parameters
         self.agent_host = MalmoPython.AgentHost()
@@ -66,12 +65,11 @@ class Farmer(gym.Env):
         self.steps = []
 
     def init_malmo(self):
-        size = 25
-        world = self.world_gen.gen_island(size)
-        fences = self.world_gen.generate_enclosed_area(size, 'fence', 2)
-        fences += self.world_gen.generate_enclosed_area(size, 'fence', 3)
-        border = self.world_gen.generate_enclosed_area(size + 1, 'cobblestone', 2)
-        border += self.world_gen.generate_enclosed_area(size + 2, 'cobblestone', 2)
+        size = 50
+        world = self.world_gen.gen_fertile_wasteland(size, 0.1)
+        fences = self.world_gen.generate_enclosed_area(size, 'fence')
+        border = self.world_gen.generate_enclosed_area(size + 1, 'cobblestone')
+        border += self.world_gen.generate_enclosed_area(size + 2, 'cobblestone')
         my_mission = MalmoPython.MissionSpec(self.world_gen.get_mission_xml(world + fences + border), True)
         my_mission_record = MalmoPython.MissionRecordSpec()
         my_mission.requestVideo(800, 500)
@@ -124,7 +122,7 @@ class Farmer(gym.Env):
         self.episode_step = 0
         self.in_water_block = False
         # log
-        if len(self.returns) > self.log_frequency and len(self.returns) % self.log_frequency == 0:
+        if len(self.returns) > self.log_frequency + 1 and len(self.returns) % self.log_frequency == 0:
             self.log_returns()
             if self.debug:
                 print('Logging')
@@ -151,7 +149,9 @@ class Farmer(gym.Env):
         self.agent_host.sendCommand(command_turn)
         self.agent_host.sendCommand(command_jump)
         self.agent_host.sendCommand(command_attack)
-        time.sleep(0.05)  # sleep for 20 ticks, which is normally 1 second
+        self.agent_host.sendCommand('chat /effect @a 23 99999 10')
+        self.agent_host.sendCommand('chat /weather clear')
+        time.sleep(0.001) # sleep for 20 ticks, which is normally 1 second
 
         self.episode_step += 1
         world_state = self.agent_host.getWorldState()
@@ -166,10 +166,11 @@ class Farmer(gym.Env):
         done = not world_state.is_mission_running
 
         # get reward
-        num_wheat = self._calculate_num_of_wheat(world_state)
-        if num_wheat is not None:
-            self.episode_return = num_wheat
         step_reward = 0
+        for r in world_state.rewards:
+            reward = r.getValue()
+            step_reward += reward
+        self.episode_return += step_reward
 
         return self.obs, step_reward, done, dict()
 
@@ -187,27 +188,13 @@ class Farmer(gym.Env):
         # send command to use item in hotbar
         self.agent_host.sendCommand("use 1")
 
-    def _calculate_num_of_wheat(self, world_state):
-        num = 0
-        while world_state.is_mission_running:
-            world_state = self.agent_host.getWorldState()
-            if world_state.number_of_observations_since_last_state > 0:
-                msg = world_state.observations[-1].text
-                observations = json.loads(msg)
-                for attr in observations:
-                    if "Hotbar" in attr:
-                        hotbar = attr[:-4]
-                        if attr[9:] == "size" and observations[hotbar + "item"] == "wheat":
-                            num += observations[attr]
-                return num
-
     def get_observation(self, world_state):
         """
         Get world observations
         Will be using 2x25x25 grid, rotated depending on the orientation of the agent
         """
 
-        obs = np.zeros((2 * self.obs_size * self.obs_size,))
+        obs = np.zeros((2 * self.obs_size * self.obs_size, ))
         while world_state.is_mission_running:
             time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
@@ -216,12 +203,12 @@ class Farmer(gym.Env):
 
             if world_state.number_of_observations_since_last_state > 0:
                 msg = world_state.observations[-1].text
-
+                
                 observations = json.loads(msg)
                 grid = observations['floorAll']
                 for i, x in enumerate(grid):
                     obs[i] = x == 'farmland' or x == 'wheat' or x == 'dirt' or x == 'grass' or x == 'water'
-
+                
                 obs = obs.reshape((2, self.obs_size, self.obs_size))
                 # if agent falls into water block
                 if observations['YPos'] == 1.0:
@@ -248,6 +235,7 @@ class Farmer(gym.Env):
     def log_returns(self):
         """
         Log the current returns as a graph and text file
+
         Args:
             steps (list): list of global steps after each episode
             returns (list): list of total return of each episode
@@ -257,7 +245,7 @@ class Farmer(gym.Env):
         returns_smooth = np.convolve(self.returns[1:], box, mode='same')
         plt.clf()
         plt.plot(self.steps[1:], returns_smooth)
-        plt.title('Farmer: Final Lake Run')
+        plt.title('Farmer: Seed Planting')
         plt.ylabel('Return')
         plt.xlabel('Steps')
         plt.savefig(os.path.join(save_path, 'returns.png'))
