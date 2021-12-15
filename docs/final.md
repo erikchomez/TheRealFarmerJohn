@@ -21,7 +21,7 @@ in direct sunlight, clustering crops, etc.)
 To accomplish this goal, we decided to use reinforcement learning, similar to the
 mission in Assignment 2. However, for our project, reinforcement learning by itself
 was unable to establish the connection between sowing and proper harvesting due to the time necessary for wheat growth.
-Therefore, we opted to train our agent using a curriculum learning process in which we could specify individual skills necessary for the process and allow the agent to link these learned behaviors together to successfully optimalize the end goal of harvesting wheat.
+Therefore, we opted to train our agent using a curriculum learning process in which we could specify individual skills necessary for the process and allow the agent to link these learned behaviors together to successfully optimize the end goal of harvesting wheat.
 Curriculum learning also allowed us to split the complex task into smaller segments for easier debugging and analysis, and due to the prolonged time necessary for crop growth in Minecraft without the use of artificial lights or bone meal, was pivotal in producing reasonable test durations. It was both convenient and necessary in order to attempt this multi-stage, randomized time-delay task.
 
 In regards to the process itself, farming in Minecraft is a multi-step process that can be optimized with various factors:
@@ -48,7 +48,7 @@ there is no trivial way to maximize the return of wheat without using "smart"
 algorithms or machine learning in application on varying environments. An agent must plant the seed, abstain from breaking the growing crop, and only harvest the wheat when fully grown. Given Malmo's limited observation space, the agent is unable to tell if the farmland is watered or not and what stage of growth the crop is in. Given that the growth time for crops can vary up to a factor of 3 times the minimum ticks required, the agent must maintain efficiency by balancing the line between overwaiting and premature harvesting. 
 Even with smart algorithms, there may be bias
 introduced with the methodology of each step, which is why we opted for pure
-machine-learning. In other words, we didn't hard-code any behavior into our agent,
+machine-learning. In other words, we didn't hard-code any behavior into our agent
 so our agent would learn how to optimize farming using only its environment and reward system.
 
 Our agent's action space includes:
@@ -128,7 +128,7 @@ generated to make the task more difficult.
 
 Lesson 3 was too difficult for the agent to master, as the agent forgot most of
 its previous training and instead opted to sit and do nothing as opposed to planting crops.
-The agent still planted a full field of seeds sometimes, but othertimes sat still. This
+The agent still planted a full field of seeds sometimes, but at other times sat still. This
 may have been due to the random generation of water; if the agent spawned in a
 body of water, its observation space would be filled with water and it would give up.
 
@@ -136,7 +136,7 @@ Lesson 4 may have been too much for our agent, due to the challenges presented
 in the previous lesson. The agent was overfitted, and as a result didn't like planting anything
 due to the punishments being weighted more than the rewards.
 
-Building off of Lesson 3, in a different environement consisting of a 9x9 enclosed space with a single water block in the center, the agent was able to harvest wheat with a few supervisiations. Since the space is so compact, and there is no room for the agent to walk around and take actions while it waits for the crop to grow, instead it goes into a hibernation, waiting a certain amount of time to allow the crops to grow. To speed up the process as well, torches were placed around the farmland to allow the crops to grow overnight. With these modifications, the agent was able to successfully harvest wheat. 
+Building off of Lesson 3, in a different environment consisting of a 9x9 enclosed space with a single water block in the center, the agent was able to harvest wheat with a few supervisiations. Since the space is so compact, and there is no room for the agent to walk around and take actions while it waits for the crop to grow, instead it goes into a hibernation, waiting a certain amount of time to allow the crops to grow. To speed up the process as well, torches were placed around the farmland to allow the crops to grow overnight. With these modifications, the agent was able to successfully harvest wheat. 
 
 4.1 Harvesting wheat in smaller enclosed space
 * Environment: Flat grass plane enclosed with fences 9 blocks on any side, as well as a 5x5 farmland grid in the center.
@@ -152,7 +152,7 @@ Building off of Lesson 3, in a different environement consisting of a 9x9 enclos
 Although this approach worked, and the agent was able to harvest crop at the end. It wouldn't translate well to the actual gameplay mechanics. If the agent were to stand still and wait for crops to grow, it exposes itself to potential mob attacks if it does so during the night. Also, staying still prevents the agent from learning and collecting rewards by hoeing dirt and planting seeds. 
 
 ### Converging Skills Curriculum
-As our first approach was unable to establish the connection between sowing seeds and harvesting fully grown wheat in seperated and specified lessons, we attempted a new approach focusing on consistently pushing the agent towards proper harvesting within segmented lessons. 
+As our first approach was unable to establish the connection between sowing seeds and harvesting fully grown wheat in separated and specified lessons, we attempted a new approach focusing on consistently pushing the agent towards proper harvesting within segmented lessons. 
 
 We trained the agent in the following steps:
 
@@ -162,7 +162,7 @@ The key objective of wheat collection was maintained by outsizing it's reward, w
 
 The first two stages were 50x50 blocks, bordered by a 1 block high fence with cobblestone beyond it that would penalize the agent and end the current mission, and 10% of the land available were water blocks distributed near the central spawn area.
 
-1. Priotizing Seeds:
+1. Prioritizing  Seeds:
     * The first lesson was focused on re-teaching the agent to plant seeds without having the agent be stuck in water or escape by randomly placing dirt blocks by the fence.
     * The reward / penalty schema was:
       * PLANTING SEED +2 (ENCOURAGE PLANTING)
@@ -178,7 +178,7 @@ The first two stages were 50x50 blocks, bordered by a 1 block high fence with co
     ![banner2](https://i.imgur.com/LNHZm2e.png)
     * This was due to the same roadblock we were facing in our first approach: myopic reward optimalization. This core challenge will be expanded on our evaluation section.
 
-2. Priotizing Wheat:
+2. Prioritizing  Wheat:
     * After analysing the issues we faced in the first lesson, we attempted to account for them by shifting the reward weights to prioritize wheat collection and giving the agent an additional diamond hoe in place of a seed stack.
     * The new reward / penalty schema was:
       * PLANTING SEED +1 (LOWERED TO AVOID SOW NOT HARVEST STRATEGY)
@@ -188,8 +188,8 @@ The first two stages were 50x50 blocks, bordered by a 1 block high fence with co
       * PLACING DIRT -10 (PENALIZE POTENTIAL ESCAPE)
       * STEPPING ON COBBLESTONE -1000 (HEAVILY PENALIZE ESCAPES)
       * COLLECTING SEED -2 (LOWERED TO ENCOURAGE BREAKING WHEAT EVEN IF PREMATURE)
-   *  This stage was ran for the longest time, as we believed it was the most critical component of the agent's learning to reach the final goal.
-   *  Only two escapes were recorded, and although a restat was necessary due to a crash caused by server lag , this lesson was extremely successful.
+   *  This stage was left running for the longest time, as we believed it was the most critical component of the agent's learning to reach the final goal.
+   *  Only two escapes were recorded, and although a restart was necessary due to a crash caused by server lag, this lesson was extremely successful.
    *  The agent went from accidentally breaking wheat to developing a set pattern, and even though penalties were increased on average, maintained a fairly high reward outcome.
 
    ![banner2](https://i.imgur.com/kICC8JE.png)
@@ -201,7 +201,7 @@ The first two stages were 50x50 blocks, bordered by a 1 block high fence with co
 
    ![banner2](https://i.imgur.com/b7QsDYJ.png)
 
-   *  The seed planting optimization was carried through into this lesson, showing the fruits of our cirriculum learning - in this example, the agent has planted nearly 6 stacks of seeds within 28% of the alloted time.
+   *  The seed planting optimization was carried through into this lesson, showing the fruits of our curriculum learning - in this example, the agent has planted nearly 6 stacks of seeds within 28% of the allotted time.
 
    ![banner2](https://i.imgur.com/XoF1EBv.png)
 
@@ -216,8 +216,8 @@ The first two stages were 50x50 blocks, bordered by a 1 block high fence with co
       * PLACING DIRT -10
       * STEPPING ON COBBLESTONE -100 (REDUCED PENALTY TO KEEP GRAPHS NEATER)
       * COLLECTING SEED -2
-   * Rewards for planting seeds were now completely removed, as we wanted our agent to not rely on any kind of tactic where they maximalize seed planting for rewards. Besides a small reward for water, the only reward source was from the wheat. We wanted to force our agent to become efficient in resource and time management, further penalize unnecessary dirt block breakage, heavily prioritize hydrated farmland, and focus purely on wheat harvesting rather than seed planting.
-   * As expected, this step was largely in the negatives for our agent, and escapes were somehwat frequent.
+   * Rewards for planting seeds were now completely removed, as we wanted our agent to not rely on any kind of tactic where they prioritized seed planting for rewards. Besides a small reward for water, the only reward source was from the wheat. We wanted to force our agent to become efficient in resource and time management, further penalize unnecessary dirt block breakage, heavily prioritize hydrated farmland, and focus purely on wheat harvesting rather than seed planting.
+   * As expected, this step was largely in the negatives for our agent, and escapes were somewhat frequent.
 
    ![banner2](https://i.imgur.com/RYxlCUq.png)
 
@@ -228,34 +228,36 @@ The first two stages were 50x50 blocks, bordered by a 1 block high fence with co
    ![banner2](https://i.imgur.com/1Dq5yjc.png)
 
    * It still maintained ideal planting speed, quickly using up both the hoe and seeds. The issue was that in a small map, the agent frequently ended up escaping or waiting too long, with the mission ending right as it began to harvest.
-   * This was largely in line with our goal, as the agent was to return to it's normal constraints but with the cirriculum of efficiency embedded in it's behavior.
+   * This was largely in line with our goal, as the agent was to return to its normal constraints but with the curriculum of efficiency embedded in its behavior.
 
 4. Application in Island Environment
-   * The agent, now armed with an definitely understanding of where and how quickly to till and sow, a grasp on when to harvest, and the bias for task efficiency, is put to the test against a completely untrained baseline in a foreign environment.
-   * If successful, the segmented skills should converge through cirriculum learning into a behavior that vastly outperforms an agent without the aforementioned lessons.
-   * All of the agents resources and time were reset to the first lesson's. (1 diamond hoe, 6 stacks of seeds)
+   * The agent, now armed with a definite understanding of where and how quickly to till and sow, a grasp on when to harvest, and the bias for task efficiency, is put to the test against a completely untrained baseline in a foreign environment.
+   * If successful, the segmented skills should converge through curriculum learning into a behavior that vastly outperforms an agent without the aforementioned lessons.
+   * All of the agent's resources and time were reset to the first lesson's. (1 diamond hoe, 6 stacks of seeds)
    * The new environment was a 30x30 simulated island, with a small 6x6 lake in the center and an outer 1 block ring of water. Borders were kept in place for the sake of the untrained agent and consistency. There were 4 outer rings and 4 inner rings of hydratable farmland, and 15 middle rings of dry farmland between them to allow selectivity of crop placement.
    * The new reward / penalty schema was:
       * COLLECTING WHEAT +1 (THE END GOAL, THE ONLY MEASUREMENT THAT MATTERS IN OUR AGENTS LEARNING)
       * NOTHING ELSE IS COUNTED, AS WE ONLY WANT TO SEE HOW MUCH WHEAT OUR AGENT CAN SUCCESSFULLY GATHER
-   * At this point, we successfully debugged and implemented our own reward system for wheat. Unlike previous lessons when some wheat were uncounted for due to missed ticks, we verified that our system is accurate in every observed mission.
+   * At this point, we successfully debugged and implemented our own reward system for wheat. Unlike previous lessons when some wheats were uncounted for due to missed ticks, we verified that our system is accurate in every observed mission.
 
    ![banner2](https://i.imgur.com/gZ4XA83.png)
 
-   * As we can see in our baseline, the untrained agent was still able to successfully pull a few wheat from assumably random behavior, albeit inconsistent and often returning back to 0.
+   * As we can see in our baseline, the untrained agent was still able to successfully gather a few wheats from assumably random behavior, albeit inconsistent and often returning back to 0.
 
    ![banner2](https://i.imgur.com/LBoA7K7.png)
 
-   * As shown above, our trained agent completely outperformed the untrained agent, consistently reaching above 15 crops to a maximum of 38 crops. Due to the limited size of the environment, it still strugged with escaping borders occassionally.
+   * As shown above, our trained agent completely outperformed the untrained agent, consistently reaching above 15 crops to a maximum of 38 crops. Due to the limited size of the environment, it still struggled with escaping borders occasionally.
 
 
 ## Evaluation
 ### Quantitative
-From a quantitative standpoint, our agent was able to harvest over a stack of wheat
-(64 units, maximum per item slot) as it progressed in its last lesson in the second
-curriculum. Our baseline agent was only able to harvest a few wheat, in random
+From a quantitative standpoint, our agent was able to harvest over 40 wheats on average
+as it progressed in its last lesson in the second
+curriculum, and 30 on average in the last curriculum. 
+Our baseline agent was only able to harvest a few wheats in random
 intervals, so it's clear that our trained agent was able to learn through its 
-curriculum.
+curriculum. Our rewards charts, albeit flawed due to Malmo's reward system, still shows a massive gap between
+untrained and trained agents, and a continual progress towards efficiently gathering wheat.
 ### Qualitative
 There are several improvements that our agent could use.
 
@@ -283,7 +285,7 @@ player.
 Surprisingly, the agent also taught us something. It's more efficient to harvest
 wheat by jumping on it than breaking it. Our agent, in its last lesson, learned that 
 breaking wheat, then walking over to pick it up, takes too much time. Jumping on wheat
-directly below the agent allows it to  take the wheat immediately, which is faster.
+directly below the agent allows it to take the wheat immediately, which is faster. Most of us would not think to do so, as it returns the farmland beneath into regular dirt, but the agent does not care as there was never a point where the agent had enough time to plant, harvest, replant, and harvest the same block, and therefore never optimized for it. Our agent was able to discover something most of us would not consider, as it only looks at the task in hand rather than conventional reasoning.
 
 ### Malmo's Limits
 Malmo was not easy to work with. Teaching an agent to farm took a lot of time, and
@@ -298,7 +300,7 @@ seeds in its inventory.
 
 To get past this, we had to implement many of our own changes that either
 normalize Malmo's rewards, or bypassed them entirely. The only problem with normalizing
-rewards is that we couldn't distinguish between the agent collecting seeds, or wheat.
+rewards are that we couldn't distinguish between the agent collecting seeds, or wheat.
 This effectively killed the agent's learning chances in the first curriculum, and made
 all subsequent missions more difficult.
 
