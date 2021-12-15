@@ -6,16 +6,16 @@ except:
 import json
 # import logging
 import sys
-# import random
-import utils as uti
+import random
+import math
+from generation.utils import WorldGenerator
+import generation.utils as uti
 import time
 import gym
 import os
 import numpy as np
 from gym.spaces import Discrete, Box
 import matplotlib.pyplot as plt
-
-JUMP_REWARD = -10
 
 
 class Farmer(gym.Env):
@@ -24,14 +24,20 @@ class Farmer(gym.Env):
         self.reward_density = 0.1
         self.penalty_density = 0.02
         self.obs_size = 3
-        self.max_episode_steps = 200
+        self.max_episode_steps = 500
         self.log_frequency = 1
+
+        self.world_gen = WorldGenerator()
+        self.save_path = '/Users/erikgomez/MalmoPlatform/Python_Examples/returns'
+        self.debug = True
 
         self.action_dict = {
             0: 'move 1',
             1: 'turn 1',
             2: 'use 1',
-            3: 'jump 1'
+            3: 'strafe 1',
+            4: 'switch 1',
+            5: 'attack 1'
         }
 
         # Rllib parameters
@@ -53,14 +59,14 @@ class Farmer(gym.Env):
         # Farmer parameters
         self.obs = None
         self.allow_break_action = False
-        self.in_water_block = False
+        self.agent_wait = False
         self.episode_step = 0
         self.episode_return = 0
         self.returns = []
         self.steps = []
 
     def init_malmo(self):
-        my_mission = MalmoPython.MissionSpec(uti.get_mission_xml(), True)
+        my_mission = MalmoPython.MissionSpec(self.world_gen.get_mission_xml(), True)
         my_mission_record = MalmoPython.MissionRecordSpec()
         my_mission.requestVideo(800, 500)
         my_mission.setViewpoint(1)
@@ -78,25 +84,20 @@ class Farmer(gym.Env):
                 if retry == max_retries - 1:
                     print('Error starting mission: ', e)
                     exit(1)
-
                 else:
                     time.sleep(2)
 
         world_state = self.agent_host.getWorldState()
 
         while not world_state.has_mission_begun:
-            time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
 
             for error in world_state.errors:
                 print('\nError: ', error.text)
 
         # main loop
-        print("Starting To Farm")
-
-        # mission has ended
-        # give mod some time to prepare for next mission
-        time.sleep(0.5)
+        if self.debug:
+            print("Starting To Farm")
 
         return world_state
 
@@ -114,11 +115,14 @@ class Farmer(gym.Env):
         self.steps.append(current_step + self.episode_step)
         self.episode_return = 0
         self.episode_step = 0
-        self.in_water_block = False
+        self.agent_wait = False
+        self.allow_break_action = False
+
         # log
         if len(self.returns) > self.log_frequency + 1 and len(self.returns) % self.log_frequency == 0:
             self.log_returns()
-            print('Logging')
+            if self.debug:
+                print('Logging')
 
         # get observation
         self.obs = self.get_observation(world_state)
@@ -129,46 +133,37 @@ class Farmer(gym.Env):
         # get action
         command_move = "move " + str(action[0])
         command_turn = "turn " + str(action[1])
-        command_use = "use 1" if action[2] > 0.5 else "use 0"
-        command_jump = "jump 1" if action[3] > 0.5 else "jump 0"
+        command_strafe = "strafe " + str(action[3])
+        command_attack = "attack 1" if action[5] > 0.5 else "attack 0"
 
-        jump_reward = 0
+        if self.allow_break_action:
+            self.agent_host.sendCommand(command_move)
+            self.agent_host.sendCommand(command_turn)
+            self.agent_host.sendCommand(command_strafe)
+            self.agent_host.sendCommand(command_attack)
+            time.sleep(0.02)  # sleep for 20 ticks, which is normally 1 second
 
-        # check if agent is stuck in water
-        if self.in_water_block:
-            print("STUCK IN WATER BLOCK")
-            self.agent_host.sendCommand("jump 1")
-            self.agent_host.sendCommand("move 1")
+        elif not self.agent_wait:
+            # Use command
+            item_slot = math.ceil(abs(action[4]) * 10)
+            if item_slot > 9:
+                item_slot = 9
+            self._use_hotbar(item_slot)
 
-            jump_reward += JUMP_REWARD
-            time.sleep(2)
-
-            self.agent_host.sendCommand("jump 0")
+            self.agent_host.sendCommand(command_move)
+            self.agent_host.sendCommand(command_turn)
+            self.agent_host.sendCommand(command_strafe)
+            self.agent_host.sendCommand(command_attack)
+            time.sleep(0.02)  # sleep for 20 ticks, which is normally 1 second
         else:
-
-            # check if any farmland is in front of agent
-            if any(self.obs[0][:3]) and command_use == "use 1":
-                # switch to hotbar.1: wheat seeds
-                self._use_hotbar(2)
-
-            # check if any dirt is in front of agent
-            elif any(self.obs[1][:3]) and command_use == "use 1":
-                # switch to hotbar.0: diamond hoe
-                self._use_hotbar(1)
-
-            else:
-
-                self.agent_host.sendCommand(command_move)
-                self.agent_host.sendCommand(command_turn)
-
-        time.sleep(0.2)
+            self._agent_wait()
 
         self.episode_step += 1
-
         world_state = self.agent_host.getWorldState()
 
         for error in world_state.errors:
-            print('Error: ', error.text)
+            if self.debug:
+                print('Error: ', error.text)
 
         self.obs = self.get_observation(world_state)
 
@@ -176,17 +171,29 @@ class Farmer(gym.Env):
         done = not world_state.is_mission_running
 
         # get reward
-        reward = 0
-
+        step_reward = 0
         for r in world_state.rewards:
-            reward += r.getValue()
+            reward = r.getValue()
 
-        self.episode_return += reward
-        self.episode_return += jump_reward
+            if reward > 0:
+                reward = 1
+            else:
+                reward = -1
 
-        # print("REWARD: ", reward)
+            step_reward += reward
 
-        return self.obs, reward, done, dict()
+        self.episode_return += step_reward
+
+        return self.obs, step_reward, done, dict()
+
+    def _agent_wait(self):
+        self.agent_host.sendCommand("move 0")
+        self.agent_host.sendCommand("turn 0")
+        self.agent_host.sendCommand("strafe 0")
+        self.agent_host.sendCommand("attack 0")
+        self.agent_host.sendCommand("use 0")
+
+        time.sleep(0.02)  # sleep for 20 ticks, which is normally 1 second
 
     def _use_hotbar(self, hotbar_key):
         """
@@ -207,48 +214,39 @@ class Farmer(gym.Env):
         Get world observations
         Will be using 3x3 grid, rotated depending on the orientation of the agent
         """
-        # obs = np.zeros((self.obs_size * self.obs_size, ))
-        # observations for farmland and dirt
+
         obs = np.zeros((2, self.obs_size * self.obs_size))
-
-        # allow_break_action = False
-
         while world_state.is_mission_running:
-            time.sleep(0.1)
-
             world_state = self.agent_host.getWorldState()
-
             if len(world_state.errors) > 0:
                 raise AssertionError('Could not load grid')
 
             if world_state.number_of_observations_since_last_state > 0:
-                # first we get json from observation API
                 msg = world_state.observations[-1].text
                 observations = json.loads(msg)
-                # print(observations)
-                # get observation
-                # TODO: fix crash on KeyError: 'floor3x3'
+
                 try:
                     grid = observations['floor3x3']
-                    # print(grid)
+                    farm_grid = observations['farmland_grid']
 
                 except KeyError:
                     continue
-                # print(observations)
-                # if agent falls into water block
-                if observations['YPos'] == 1.0:
-                    self.in_water_block = True
-                else:
-                    self.in_water_block = False
 
-                # print('len grid: ', len(grid))
+                if farm_grid.count('wheat') > 15:
+                    print('agent will now wait')
+                    self.agent_wait = True
+                    # print('XPos: ', observations['XPos'])
+                    # print('ZPos: ', observations['ZPos'])
+
+                if observations['TotalTime'] > 75000:
+                    print('harvesting time...')
+                    self.allow_break_action = True
+                    self.agent_wait = False
+
                 for i, x in enumerate(grid):
-                    obs[0][i] = x == 'farmland'
-                    obs[1][i] = x == 'dirt'
-                    # farmland_obs[i] = x == 'farmland'
-                    # dirt_obs[i] = x == 'dirt'
+                    obs[0][i] = 1 if x == 'wheat' else 0
+                    obs[1][i] = 1 if x == 'dirt' or x == 'grass' else 0
 
-                # print('obs before ', obs)
                 # rotate observations with orientation of agent
                 obs = obs.reshape((2, 3, 3))
 
@@ -257,17 +255,13 @@ class Farmer(gym.Env):
                 # rotate on axes=(1,2) so we can have farmland observations at the top
                 if 255 <= yaw < 315:
                     obs = np.rot90(obs, k=1, axes=(1, 2))
-
                 elif yaw >= 315 or yaw < 45:
                     obs = np.rot90(obs, k=2, axes=(1, 2))
 
                 elif 45 <= yaw < 135:
                     obs = np.rot90(obs, k=3, axes=(1, 2))
 
-                # obs = obs.flatten()
                 obs = obs.reshape((2, self.obs_size * self.obs_size))
-                # print('obs after ', obs)
-                # allow_break_action = observations['LineOfSight']['type'] == 'farmland'
 
                 break
 
@@ -281,7 +275,7 @@ class Farmer(gym.Env):
             steps (list): list of global steps after each episode
             returns (list): list of total return of each episode
         """
-        save_path = '/Users/erikgomez/Desktop'
+        save_path = self.save_path
         box = np.ones(self.log_frequency) / self.log_frequency
         returns_smooth = np.convolve(self.returns[1:], box, mode='same')
         plt.clf()
