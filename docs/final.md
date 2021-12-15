@@ -7,6 +7,9 @@ title: Final Report
 
 ## Video
 
+[![Watch the video](https://img.youtube.com/vi/DX2mueYg7qM/maxresdefault.jpg)](https://www.youtube.com/watch?v=DX2mueYg7qM)
+
+
 ## Project Summary
 Our project goal is to train a Minecraft agent to plant, grow, and harvest
 as much wheat as possible in a 10000000-tick Minecraft cycle. In doing so, we wanted
