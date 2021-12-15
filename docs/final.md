@@ -240,7 +240,7 @@ The first two stages were 50x50 blocks, bordered by a 1 block high fence with co
       * NOTHING ELSE IS COUNTED, AS WE ONLY WANT TO SEE HOW MUCH WHEAT OUR AGENT CAN SUCCESSFULLY GATHER
    * At this point, we successfully debugged and implemented our own reward system for wheat. Unlike previous lessons when some wheat were uncounted for due to missed ticks, we verified that our system is accurate in every observed mission.
 
-   ![banner2](https://i.imgur.com/5nndxDM.jpeg)
+   ![banner2](https://i.imgur.com/gZ4XA83.png)
 
    * As we can see in our baseline, the untrained agent was still able to successfully pull a few wheat from assumably random behavior, albeit inconsistent and often returning back to 0.
 
