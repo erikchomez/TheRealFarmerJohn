@@ -143,7 +143,7 @@ Building off of Lesson 3, in a different environement consisting of a 9x9 enclos
     
 * *Agent was able to plant seeds, and wait for the crop to grow. Then was able to harvest crop.*
     
-![](https://raw.githubusercontent.com/erikchomez/TheRealFarmerJohn/blob/main/docs/images/returns_enclosed.png)
+![banner2](https://i.imgur.com/8pb3aie.png)
 Although this approach worked, and the agent was able to harvest crop at the end. It wouldn't translate well to the actual gameplay mechanics. If the agent were to stand still and wait for crops to grow, it exposes itself to potential mob attacks if it does so during the night. Also, staying still prevents the agent from learning and collecting rewards by hoeing dirt and planting seeds. 
 
 ### Bills Curriculum TBD
