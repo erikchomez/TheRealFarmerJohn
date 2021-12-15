@@ -131,7 +131,25 @@ body of water, its observation space would be filled with water and it would giv
 Lesson 4 may have been too much for our agent, due to the challenges presented
 in the previous lesson. The agent was overfitted, and as a result didn't like planting anything
 due to the punishments being weighted more than the rewards.
+
+Building off of Lesson 3, in a different environement consisting of a 9x9 enclosed space with a single water block in the center, the agent was able to harvest wheat with a few supervisiations. Since the space is so compact, and there is no room for the agent to walk around and take actions while it waits for the crop to grow, instead it goes into a hibernation, waiting a certain amount of time to allow the crops to grow. To speed up the process as well, torches were placed around the farmland to allow the crops to grow overnight. With these modifications, the agent was able to successfully harvest wheat. 
+
+4.1 Harvesting wheat in smaller enclosed space
+* Environment: Flat grass plane enclosed with fences 9 blocks on any side, as well as a 5x5 farmland grid in the center.
+    
+* Rewards: +1 for harvesting wheat
+    
+* Punishments: -1 for collecting torches
+    
+* *Agent was able to plant seeds, and wait for the crop to grow. Then was able to harvest crop.*
+    
+![](https://raw.githubusercontent.com/erikchomez/TheRealFarmerJohn/blob/main/docs/images/returns_enclosed.png)
+Although this approach worked, and the agent was able to harvest crop at the end. It wouldn't translate well to the actual gameplay mechanics. If the agent were to stand still and wait for crops to grow, it exposes itself to potential mob attacks if it does so during the night. Also, staying still prevents the agent from learning and collecting rewards by hoeing dirt and planting seeds. 
+
 ### Bills Curriculum TBD
+
+
+
 ## Evaluation
 ### Quantitative
 From a quantitative standpoint, our agent was able to harvest over a stack of wheat
