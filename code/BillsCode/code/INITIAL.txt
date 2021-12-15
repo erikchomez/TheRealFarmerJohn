@@ -1,0 +1,41 @@
+GAME MECHANICS:
+HYDRATED WATER MAKES SEED GROW FASTER
+WATER HYDRATES 4 BLOCKS IN EACH DIRECTION
+FARMLAND DECAYS IF DEHYDRATED AND NOTHING PLANTED
+FULLY GROWN WHEAT YIELDS 0-3 SEEDS PER CROP, 2.5 SEED ARVERAGE
+"AGE 7" WHEAT YIELDS 1 WHEAT + SEEDS, REST YIELDS 1 SEED
+HARVESTING EARLY DROPS 1 WHEAT NO SEEDS
+FARMLAND REVERTED TO DIRT IF JUMPED ON
+- DROPS AS IF HARVESTED
+REQUIRES LEVEL 9 LIGHT, AND WE ARE USING NATURAL SUNLIGHT ONLY
+GROWTH HAPPENS AT RANDOM INTERVALS AFFECTED BY GORWING CONDITIONS
+5-35 IN GAME MINUTES PER STAGE
+
+To fully grow a wheat crop it can take from 24,000 ticks to 72,000 ticks. 
+Ticks are the time period in Minecraft and 1 tick is equal to 0.05 seconds. 
+In Minecraft, a game tick represents one game loop run. 
+A game day in the game lasts exactly 24000 ticks, or 20 minutes, as the speed of the game is fixed at 20 ticks per second.
+
+It takes at least 60 minutes for the wheat to grow in Minecraft.  Sometimes it grows faster and some slower but approximately 60 minutes is a good amount of time. To harvest in the minimum time possible, wheat seeds need to be sown under an open sky and with a block of water nearby it.
+https://fictionhorizon.com/how-long-does-it-take-for-wheat-to-grow-in-minecraft/
+
+NEED ENOUGH TIME FOR WHEAT TO GROW
+- BUT CONSTRAINT TIME SO THAT HYDRATED WHEAT GROWS BEFORE DRY WHEAT
+
+DEPENDING ON VARIOUS CONDITIONS GROWTH IS AFFECTED:
+SEE SCREENSHOT
+https://minecraft.fandom.com/wiki/Tutorials/Crop_farming
+https://minecraft.fandom.com/wiki/Wheat_Seeds
+https://minecraft.fandom.com/wiki/Wheat
+https://minecraft.fandom.com/wiki/Farmland
+
+
+OUR APPROACH:
+TEACH SOWING SEEDS AND USING HOE -> REWARD PLANTING SEEDS, NOT GETTING STUCK IN WATER, NOT LEAVING BOUNDARIES
+TEACH HARVESTING CROPS AND IMPORTANCE OF LOCATION -> REWARD HARVEST WHEAT, MORE RESOURCES TO GET TO WHEAWT
+TEACH CONSTRAINTS AND EFFIENCY -> CUT TIME, CUT LAND, CUT RESOURCES, AGENT MUST NOW PLANT QUICKLY AND HARVEST QUICKLY
+- UNDERSTAND CROPS GROW FASTER NEAR WATER
+- UNDERSTAND CROPS TAKE TIME TO GROW AND SHOULD NOT BE HARVEST EARLY
+- DO SO WITH LIMITED RESOURCES
+
+APPLICATION: "NATURAL" ISLAND, AGENT MUST PLANT SEEDS TO "SURVIVE"
